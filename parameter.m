@@ -20,6 +20,8 @@ switch lower(type)
         s = jacobi_parameter(l,r,-1/2,-1/2);
     case 'hermite'
         s = hermite_parameter();
+    case 'gaussian'
+        s = hermite_parameter();
     otherwise
         error('Unrecognized parameter type: %s',type);
 end
