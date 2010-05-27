@@ -76,8 +76,6 @@ if isequal(p_order,'adapt')
         if isequal(convtype,'relerr'), refsoln=X; end
     end
 else
-    N=size(iAb(ones(dim,1)),1); % size of system
-
     % Construct the array of dim dimensional gauss points and the eigenvector
     % matrix of the multivariate Jacobi matrix.
     Q=cell(dim,1);
@@ -87,13 +85,18 @@ else
         q0=kron(q0,Q{i}(1,:));
     end 
     p=gaussian_quadrature(s,p_order+1);
+    
+    % evaluate the first point, so we can get the size of the system
+    u0 = q0(1)*iAb(p(1,:));
+    N = size(u0,1);
 
     % Solve the parameterized matrix equation at each gauss point.
     gn=prod(p_order+1);
     Uc=zeros(N,gn);
     U=zeros(size(Uc));
+    Uc(:,1) = u0;
     if parallel
-        parfor i=1:gn
+        parfor i=2:gn
             Uc(:,i) = q0(i)*iAb(p(i,:));
         end
 
@@ -105,7 +108,7 @@ else
         end
 
     else
-        for i=1:gn
+        for i=2:gn
             Uc(:,i) = q0(i)*iAb(p(i,:));
         end
 
