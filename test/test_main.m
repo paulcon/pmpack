@@ -6,4 +6,5 @@ utils_testscript;
 
 % more exhaustive tests
 pagerank_tests
+quadrature_tests
 
