@@ -93,36 +93,24 @@ else
     % Solve the parameterized matrix equation at each gauss point.
     gn=prod(p_order+1);
     Uc=zeros(N,gn);
-    U=zeros(size(Uc));
     Uc(:,1) = u0;
     if parallel
         parfor i=2:gn
             Uc(:,i) = q0(i)*iAb(p(i,:));
         end
-
-        % Change of basis to the orthonormal basis.
-        parfor i=1:N
-            x=Uc(i,:);
-            t=kronmult(Q,x');
-            U(i,:)=t';
-        end
-
     else
         for i=2:gn
             Uc(:,i) = q0(i)*iAb(p(i,:));
         end
-
-        % Change of basis to the orthonormal basis.
-        for i=1:N
-            x=Uc(i,:);
-            t=kronmult(Q,x');
-            U(i,:)=t';
-        end
-
     end
+    % in theory, Matlab can do these inplace.
+    Uc = Uc';
+    Uc = kronmult(Q,Uc);
+    Uc = Uc';
+    
 
     % Construct the coefficients with the basis labels.
-    X.coefficients=U; 
+    X.coefficients=Uc; 
     X.index_set=index_set('tensor',p_order);
     X.variables=s; 
     X.fun=iAb;
