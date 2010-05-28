@@ -1,4 +1,10 @@
 function e = error_estimate(type,X,Y)
+%
+% e = error_estimate(type,X) computes a particular error estimate based on
+% the value of 'type' and an interpolated solution X
+% 
+%   error_estimate('relerr',X,Y) requires the basis of X to be a subset of
+%     the basis of Y.
 
 if nargin<2, error('Not enough inputs.'); end
 

@@ -1,9 +1,9 @@
 function [p,w]=gaussian_quadrature(s,n,gridflag)
 % GAUSSRULE Compute a Gaussian quadrature rule
 % 
-% [p,w] = gaussrule(ab,n);
-% [p,w] = gaussrule(jacobi_param(),n);
-% [xs,ws] = gaussrule([jacobi_param(),jacobi_param()],n);
+% [p,w] = gaussian_quadrature(ab,n);
+% [p,w] = gaussian_quadrature(jacobi_param(),n);
+% [xs,ws] = gaussian_quadrature([jacobi_param(),jacobi_param()],n);
 %
 % See also
 %

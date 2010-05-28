@@ -10,7 +10,7 @@ Afun = @(a) (eye(3)-a*P');
 bfun = @(a) ((1-a)/3*[1;1;1]);
 xtrue = @(a) [(1-a)/3; (2-a-a^2)/6; (2+3*a+a^2)/6];
 for a = linspace(0,1-10*eps(1),50)
-    if norm(x(a)-xtrue(a),'inf')>2*eps(1)
+    if norm(xfun(a)-xtrue(a),'inf')>2*eps(1)
         error(msgid,'incorrect coded solution');
     end
 end

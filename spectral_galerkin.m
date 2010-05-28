@@ -131,6 +131,8 @@ else
     Grhs=reshape((B*D)*QQ',nbasis*N,1);
     
     if ~isempty(matfun) 
+        % matfun is specified (i.e. is "is not empty"), so 
+        % we compute all the matrices once, and save them in a cell array.
         Acell=cellfun(matfun,num2cell(p,2),'UniformOutput',0);
         if lowmem
             Gfun=@(v) gmatvec_lowmem(v,Acell,QQ);
