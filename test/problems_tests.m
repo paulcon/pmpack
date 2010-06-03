@@ -17,6 +17,12 @@ try
     % eek, bad accuracy, use 100 points!
     X = pseudospectral(P.solve,P.s,100);
     residual_error_estimate(X,P.Av,P.b)
+    
+    %% ellipticnd
+    P = ellipticnd;
+    dt=tic; X1 = pseudospectral(P.solve,P.s,1); toc(dt);
+    dt=tic; X1 = pseudospectral(P.solve,P.s,2); toc(dt); % a lot longer!
+    
 catch me
     rmpath('../problems');
     throw(me);
