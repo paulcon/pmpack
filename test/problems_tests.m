@@ -9,6 +9,14 @@ try
       errs(n-1) = P.N*residual_error_estimate(X,P.Av,P.b)/norm(P.b(0));
     end
     semilogy(2:20,errs,'.-');
+    
+    %% twobytwo
+    P = twobytwo(0.01); % a harder problem
+    X = pseudospectral(P.solve,P.s,10);
+    residual_error_estimate(X,P.Av,P.b)
+    % eek, bad accuracy, use 100 points!
+    X = pseudospectral(P.solve,P.s,100);
+    residual_error_estimate(X,P.Av,P.b)
 catch me
     rmpath('../problems');
     throw(me);
