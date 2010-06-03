@@ -8,3 +8,4 @@ utils_testscript;
 pagerank_tests
 quadrature_tests
 manufactured_tests
+problems_tests
