@@ -25,6 +25,6 @@ try
     
 catch me
     rmpath('../problems');
-    throw(me);
+    rethrow(me);
 end
 rmpath('../problems');
