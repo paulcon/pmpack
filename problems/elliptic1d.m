@@ -37,7 +37,7 @@ function P = elliptic1d(varargin)
 % 
 % See also ELLIPTICND
 
-% Copyright, Stanford University, 2009
+% Copyright, Stanford University, 2009-2010
 % Paul G. Constantine, David F. Gleich
 
 Nel = [];
