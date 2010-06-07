@@ -115,8 +115,10 @@ if isequal(p_order,'adapt')
     end
 else
     if any(qorder<(p_order+1))
-        warning('Integration order not sufficiently high. Using polynomial order.');
         qorder=max(p_order+1,qorder);
+        warning('pmpack:insufficientOrder',...
+            ['Integration order insufficient, '
+             'qorder must be larger than p_order. Using p_order instead.']);
     end
     
     vprintf('constructing quadrature rule npolys=%i max_qorder=%i',...
@@ -150,7 +152,6 @@ else
     Grhs=reshape((B*D)*QQ',nbasis*N,1);
     
     if ~isempty(matfun)
-        vprintf('using matfun algorithms');
         % matfun is specified (i.e. is "is not empty"), so 
         % we compute all the matrices once, and save them in a cell array.
         vprintf('precomputing matrices at sample points npoints=%i',...
@@ -173,7 +174,10 @@ else
             U=solver(Gmat,Grhs);
         end
     elseif ~isempty(matvecfun)
-        if lowmem, warning('Low memory option ignored.'); end
+        
+        if lowmem 
+            warning('pmpack:optionIgnored','Low memory option ignored.'); 
+        end
         Gfun=@(v) gmatvec(v,matvecfun,QQ,p);
         
         if isempty(solver), solver=@(A,b)gmres(A,b); end
