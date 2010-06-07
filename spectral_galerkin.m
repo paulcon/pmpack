@@ -32,6 +32,8 @@ ptol=0;
 convtype='relerr'; % types: relerr, mincoeff, resid
 refsoln=[];
 errz=[];
+verbose=0;
+vprintf = @(varargin) fprintf('spectral_galerkin: %s\n',sprintf(varargin{:}));
 
 for i=1:2:(nargin-4)
     switch lower(varargin{i})
@@ -54,10 +56,14 @@ for i=1:2:(nargin-4)
             convtype=lower(varargin{i+1});
         case 'refsoln'
             refsoln=varargin{i+1};
+        case 'verbose'
+            verbose=varargin{i+1};
         otherwise
             error('Unrecognized option: %s\n',varargin{i});
     end
 end
+
+if ~verbose, vprintf = @(varargin) []; end
 
 % logic based on p_order
 if isnumeric(p_order)
@@ -81,18 +87,25 @@ else
     error('Unrecognized option for p_order: %s\n',p_order);
 end
 
+
+
 if isequal(p_order,'adapt')
+    vprintf('using adaptive computation convtype=%s',convtype);
+    
     if isequal(convtype,'mincoeff') && ~isempty(refsoln)
         warning('Reference solution will be ignored.');
     end
     
     if isempty(refsoln)
+        vprintf('computing reference solution');
+        
         refsoln=spectral_galerkin(A,b,s,0,...
             'qorder',qorder,'solver',solver,'lowmem',lowmem);
     end
     
     err=inf; order=1;
     while err>ptol
+        vprintf('adaptive solution order=%i, error=%g\n',order, err);
         X=spectral_galerkin(A,b,s,order,...
             'qorder',qorder,'solver',solver,'lowmem',lowmem);
         err=error_estimate(convtype,X,refsoln);
@@ -100,12 +113,15 @@ if isequal(p_order,'adapt')
         order=order+1;
         if isequal(convtype,'relerr'), refsoln=X; end
     end
-    
 else
     if any(qorder<(p_order+1))
         warning('Integration order not sufficiently high. Using polynomial order.');
         qorder=max(p_order+1,qorder);
     end
+    
+    vprintf('constructing quadrature rule npolys=%i max_qorder=%i',...
+        prod(qorder+1), max(qorder));
+    
     % Construct the gauss points and truncated Jacobi eigenvectors needed to
     % form the Galerkin system.
     Q=cell(dim,1);
@@ -114,6 +130,8 @@ else
     end 
     p=gaussian_quadrature(s,qorder);
 
+    vprintf('constructing generalized quadrature weights nbasis=%i',...
+        size(basis,2));
     nbasis=size(basis,2);
     QQ=zeros(nbasis,size(p,1)); 
     for i=1:nbasis
@@ -126,24 +144,32 @@ else
     end
     
     % Construct the Galerkin right hand side.
+    vprintf('constructing rhs');
     B=cell2mat(cellfun(vecfun,num2cell(p,2),'UniformOutput',0)');
     D=spdiags(QQ(1,:)',0,size(QQ,2),size(QQ,2));
     Grhs=reshape((B*D)*QQ',nbasis*N,1);
     
-    if ~isempty(matfun) 
+    if ~isempty(matfun)
+        vprintf('using matfun algorithms');
         % matfun is specified (i.e. is "is not empty"), so 
         % we compute all the matrices once, and save them in a cell array.
+        vprintf('precomputing matrices at sample points npoints=%i',...
+            size(p,1));
         Acell=cellfun(matfun,num2cell(p,2),'UniformOutput',0);
         if lowmem
             Gfun=@(v) gmatvec_lowmem(v,Acell,QQ);
             
             if isempty(solver), solver=@(A,b)gmres(A,b); end
+            vprintf('lowmem option matsize=%i solver=%s',...
+                length(Grhs),func2str(solver));
             U=solver(Gfun,Grhs);
         else
             Alambda=blkdiag(Acell{:});
             Gmat=kron(QQ,speye(N))*Alambda*kron(QQ',speye(N));
             
             if isempty(solver), solver=@(A,b)mldivide(A,b); end
+            vprintf('fullmat option matsize=%i nnz/row=%g solver=%s',...
+                length(Grhs),nnz(Gmat)/size(Gmat,1),func2str(solver));
             U=solver(Gmat,Grhs);
         end
     elseif ~isempty(matvecfun)
@@ -151,10 +177,13 @@ else
         Gfun=@(v) gmatvec(v,matvecfun,QQ,p);
         
         if isempty(solver), solver=@(A,b)gmres(A,b); end
+        vprintf('using matvecfun algorithms matsize=%i solver=%s',...
+                length(Grhs),func2str(solver));
         U=solver(Gfun,Grhs);
     else
         error('Something went terribly wrong.');
     end
+    vprintf('done');
     
     % Pack up the solution.
     X.coefficients=reshape(U,N,nbasis);
