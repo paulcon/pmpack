@@ -32,6 +32,7 @@ ptol=0;
 convtype='relerr'; % types: relerr, mincoeff, resid
 refsoln=[];
 errz=[];
+parallel_rhs=0;
 verbose=0;
 vprintf = @(varargin) fprintf('spectral_galerkin: %s\n',sprintf(varargin{:}));
 
@@ -56,6 +57,8 @@ for i=1:2:(nargin-4)
             convtype=lower(varargin{i+1});
         case 'refsoln'
             refsoln=varargin{i+1};
+        case 'parallel_rhs'
+            parallel_rhs=varargin{i+1};
         case 'verbose'
             verbose=varargin{i+1};
         otherwise
@@ -106,8 +109,7 @@ if isequal(p_order,'adapt')
     err=inf; order=1;
     while err>ptol
         vprintf('adaptive solution order=%i, error=%g\n',order, err);
-        X=spectral_galerkin(A,b,s,order,...
-            'qorder',qorder,'solver',solver,'lowmem',lowmem);
+        X=spectral_galerkin(A,b,s,order,varargin{:});
         err=error_estimate(convtype,X,refsoln);
         errz(order)=err;
         order=order+1;
@@ -117,7 +119,7 @@ else
     if any(qorder<(p_order+1))
         qorder=max(p_order+1,qorder);
         warning('pmpack:insufficientOrder',...
-            ['Integration order insufficient, '
+            ['Integration order insufficient, ' ...
              'qorder must be larger than p_order. Using p_order instead.']);
     end
     
@@ -146,17 +148,37 @@ else
     end
     
     % Construct the Galerkin right hand side.
-    vprintf('constructing rhs');
-    B=cell2mat(cellfun(vecfun,num2cell(p,2),'UniformOutput',0)');
-    D=spdiags(QQ(1,:)',0,size(QQ,2),size(QQ,2));
-    Grhs=reshape((B*D)*QQ',nbasis*N,1);
+    if parallel_rhs
+        t0=tic;
+        b0 = vecfun(p(1,:));
+        dt=toc(t0);
+        vprintf('constructing rhs with parfor npoints=%i time_for_one=%.1fs',...
+            size(p,1),dt);
+        BD = zeros(length(b0),size(p,1));
+        BD(:,1) = b0*QQ(1,1);
+        parfor pi=2:size(p,1)
+            BD(:,pi) = vecfun(p(pi,:))*QQ(1,pi); %#ok<PFBNS>
+        end
+        Grhs=reshape(BD*QQ',nbasis*N,1);
+    else
+        B=cell2mat(cellfun(vecfun,num2cell(p,2),'UniformOutput',0)');
+        D=spdiags(QQ(1,:)',0,size(QQ,2),size(QQ,2));
+        Grhs=reshape((B*D)*QQ',nbasis*N,1);
+    end
     
     if ~isempty(matfun)
         % matfun is specified (i.e. is "is not empty"), so 
         % we compute all the matrices once, and save them in a cell array.
         vprintf('precomputing matrices at sample points npoints=%i',...
             size(p,1));
-        Acell=cellfun(matfun,num2cell(p,2),'UniformOutput',0);
+        
+        % on 2010-06-07, dgleich checked that this code was not generally
+        % slower than using cellfun.
+        Acell = cell(size(p,1),1);
+        parfor pi=1:size(p,1)
+            Acell{pi} = matfun(p(pi,:)); %#ok<PFBNS>
+        end
+        
         if lowmem
             Gfun=@(v) gmatvec_lowmem(v,Acell,QQ);
             
