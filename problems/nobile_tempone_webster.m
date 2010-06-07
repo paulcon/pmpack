@@ -61,8 +61,13 @@ b=[1 1 1 1;1 1 1 1;1 1 1 1;1 1 1 1;1 1 1 1;1 1 1 1;48 48 48 48;
         K = ntw_assemble(s);
     end
 
-    function F=ntw_rhs(s)
-        [K,F] = ntw_assemble(s); %#ok<ASGLU>
+% there is no parameter dependence on the right hand side, so just
+% precompute it and make it constant.
+
+[K0,F0] = ntw_assemble(zeros(1,d)); %#ok<ASGLU>
+
+    function F=ntw_rhs(s) %#ok<INUSD>
+        F = F0;
     end
 
     function Av=ntw_matvec(s,v)
@@ -79,7 +84,7 @@ P.b = @ntw_rhs;
 P.A = @ntw_mat;
 P.Av = @ntw_matvec;
 P.solve =@ntw_solve;
-P.b_const = 0;
+P.b_const = 1;
 P.d = d;
 P.N = length(p);
 variables(d) = jacobi_parameter;
