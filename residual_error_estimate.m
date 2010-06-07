@@ -1,4 +1,4 @@
-function r=residual_error_estimate(X)
+function r=residual_error_estimate(X,Av,bfun)
 % RESID Compute the residual sqrt(\int r'*r), where r=A*X.U*basis-f.
 %
 % Example:
@@ -6,24 +6,32 @@ function r=residual_error_estimate(X)
 % Copyright, Stanford University, 2009
 % Paul G. Constantine, David F. Gleich
 
-if ~isempty(X.matvecfun)
-    Ax=X.matvecfun;
-elseif ~isempty(X.matfun)
-    Ax=@(p,x) X.matfun(p)*x;
+if nargin==1
+    if ~isempty(X.matvecfun)
+        Ax=X.matvecfun;
+    elseif ~isempty(X.matfun)
+        Ax=@(p,x) X.matfun(p)*x;
+    else
+        error('Unable to compute residual error estimate: Missing matvec or matvecfun');
+    end
 else
-    error('Unable to compute residual error estimate: Missing matvec or matvecfun');
+    Ax = Av;
 end
 
-if ~isempty(X.vecfun)
-    b=X.vecfun;
+if nargin==1
+    if ~isempty(X.vecfun)
+        b=X.vecfun;
+    else
+        error('Unable to compute residual error estimate: Missing vecfun.');
+    end
 else
-    error('Unable to compute residual error estimate: Missing vecfun.');
+    b = bfun;
 end
 
 % determine the order of Gauss quadrature necessary to evaluate the
 % integral of the residual.
 expansion_order=max(X.index_set,[],2);
-gauss_order=2*(expansion_order+1);
+gauss_order=4*(expansion_order+1);
 [p,w]=gaussian_quadrature(X.variables,gauss_order);
 
 r=0;
