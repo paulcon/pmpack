@@ -1,10 +1,18 @@
 function r=residual_error_estimate(X,Av,bfun)
-% RESID Compute the residual sqrt(\int r'*r), where r=A*X.U*basis-f.
+%RESIDUAL_ERROR_ESTIMATE Computes residual error estimate.
 %
-% Example:
+% r = residual_error_estimate(X)
+% r = residual_error_estimate(X,Av,b)
 %
-% Copyright, Stanford University, 2009
-% Paul G. Constantine, David F. Gleich
+% Computes the residual error estimate of the approximation 'X' using the
+% operators A(s) and b(s). 
+%
+% References:
+%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
+%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
+%
+% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov).
 
 if nargin==1
     if ~isempty(X.matvecfun)

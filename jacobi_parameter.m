@@ -1,22 +1,18 @@
 function s = jacobi_parameter(l,r,a,b)
 % JACOBI_PARAMETER Construct a parameter with a Jacobi weight function
 %
-% x = jacobi_param() generates a new Jacobi parameter over [-1,1] with 
-% a uniform weight.  This parameter is the canonical integration parameter.
+% s = jacobi_param() 
+% s = jacobi_param(l,r,a,b) 
 %
-% x = jacobi_param(l,r,a,b) generate a new Jacobi parameter over [l,r]
-% with parameters alpha=a and beta=b.
+% Generates a parameter over the interval [l,r] with parameters for the
+% Jacobi weight function alpha=a and beta=b. Default values are l=-1, r=1,
+% a=0, and b=0, corresponding to a uniform weight of 0.5 over the interval
+% [-1,1].
 %
-% See also LEGENDRE_PARAM
+% See also PARAMETER, HERMITE_PARAMETER, LEGENDRE_PARAMETER
 %
-% Example:
-%   % Integrate exp(-x^2) over -1,1
-%   x = jacobi_param();
-%   xw = gaussrule(x,5); % generate a 5 point Gaussian quadrature 
-%   I = sum(feval(@(x) exp(-x.^2), xw(:,1)).*xw(:,2))
-%
-% Copyright, Stanford University, 2009
-% Paul G. Constantine, David F. Gleich
+% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov).
 
 if ~exist('l','var') || isempty(l), l= -1; end
 if ~exist('r','var') || isempty(r), r=  1; end

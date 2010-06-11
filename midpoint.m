@@ -1,4 +1,5 @@
 function m = midpoint(s)
+%MIDPOINT Computes the midpoint of the domain defined by 's'.
 
 dim=length(s);
 m=zeros(1,dim);

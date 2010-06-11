@@ -1,8 +1,10 @@
 function P = evaluate_ops(s,n,point)
 % EVALUATE_OPS Evaluate the n-vector of orthonormal polynomials at a point.
 %
-% P = evaluate_ops(x,n,point) returns a vector of the first n orthonormal
-% polynomials evaluated at point.
+% P = evaluate_ops(x,n,point) 
+%
+% Returns a vector of the first n orthonormal polynomials evaluated at 
+% point.
 %
 % Inputs:
 %   s     : parameter struct
@@ -12,13 +14,12 @@ function P = evaluate_ops(s,n,point)
 % Outputs:
 %   P     : a vector of orthonormal polynomials evaluated at a point.
 % 
-% See also
+% References:
+%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
+%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
 %
-% Example:
-%   
-%
-% Copyright, Stanford University, 2009
-% Paul G. Constantine, David F. Gleich
+% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov).
 
 assert(n>0, 'Please ensure n>0.');
 assert(max(size(s))==1, 'Works for single parameters.'); 

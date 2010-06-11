@@ -1,13 +1,19 @@
 function [r,basis]=evaluate_expansion(X,p)
 % EVALUATE_EXPANSION Evaluates a polynomial expansion at a point.
 %
-% See also
+% r = evaluate_expansion(X,p);
+% [r,basis] = evaluate_expansion(X,p);
 %
-% Example:
-%   
+% The input 'X' is a struct containing the variables for the polynomial
+% approximation. The input 'p' is a point in the parameter space to
+% evaluate the approximation.
 %
-% Copyright, Stanford University, 2009
-% Paul G. Constantine, David F. Gleich
+% References:
+%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
+%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
+%
+% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
 
 s=X.variables;
 

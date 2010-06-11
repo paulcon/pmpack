@@ -1,11 +1,15 @@
 function s = hermite_parameter()
-% HERMITE_PARAM Construct a parameter with a Hermite weight function
+% HERMITE_PARAMETER Construct a parameter with a Gaussian weight function.
 %
-% x = hermite_param() generates a new Hermite parameter over [-Inf,Inf] with 
-% a Gaussian weight.  This parameter is the canonical integration parameter.
+% s = hermite_parameter() 
 %
-% Copyright, Stanford University, 2009
-% Paul G. Constantine, David F. Gleich
+% Generates a parameter on the interval [-Inf,Inf] with a Gaussian weight 
+% function.
+%
+% See also PARAMETER, JACOBI_PARAMETER, LEGENDRE_PARAMETER
+%
+% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov).
 
 s.name = sprintf('hermite');
 s.recur = @(n) hermite_recur(n);

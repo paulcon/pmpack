@@ -1,17 +1,51 @@
 function [p,w]=gaussian_quadrature(s,n,gridflag)
 % GAUSSRULE Compute a Gaussian quadrature rule
 % 
-% [p,w] = gaussian_quadrature(ab,n);
-% [p,w] = gaussian_quadrature(jacobi_param(),n);
-% [xs,ws] = gaussian_quadrature([jacobi_param(),jacobi_param()],n);
+% [p,w] = gaussian_quadrature(parameter(),n);
+% [p,w] = gaussian_quadrature([parameter(),parameter()],n);
+% [p,w] = gaussian_quadrature(...,gridflag);
 %
-% See also
+% Computes the points and weights of a tensor product Gaussian quadrature
+% rule of order 'n' for the given parameters 's'.
 %
+% Outputs
+%   p:      If 'gridflag' is 1, then 'p' is an array of the d-dimensional
+%           points of the quadrature rule. If 'gridflag' is 0, this is a
+%           cell array of the 1-dimensional points corresponding to each
+%           element of 's' with the number of points dictated by each
+%           corresponding element of 'n'. 
+%
+%   w:      The weights of the quadrature rule. If 'gridflag' is set to 1, 
+%           then this is a single vector containing the weights associated
+%           with each d-dimensional point. If 'gridflag' is 0, this is a
+%           cell array with the weights for each 1-dimensional rule.
+%
+% Inputs:
+%   s:      A vector of parameter structs. 
+%
+%   n:      If 'n' is a scalar, then it constructs the same number of
+%           points for each element of 's'. If 'n' is a d-dimensional
+%           vector of positive integers, then it constructs a separate
+%           1-dimensional quadrature rule for each element of 'n' and each
+%           element of 's'. 
+%
+%   gridflag: A flag taking values 0 or 1 that determines whether the code
+%           outputs an array of d-dimensional points or a cell array of the
+%           1-dimensional rules. (Default 1)
+%   
 % Example:
+%   f = @(x) sin(pi*x(1))+cos(pi*x(2));     % integrate the given function
+%   s = [parameter(); parameter()];
+%   n = [3; 4];
+%   [p,w] = gaussian_quadrature(s,n);
+%   fint = 0;
+%   for i=1:size(p,1)
+%       fint = fint + f(p(i,:))*w(i);
+%   end
 %   
 %
-% Copyright, Stanford University, 2009
-% Paul G. Constantine, David F. Gleich
+% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov).
 
 if ~exist('gridflag','var') || isempty(gridflag), gridflag=1; end
 

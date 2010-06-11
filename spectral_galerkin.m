@@ -1,4 +1,130 @@
-function [X,errz] = spectral_galerkin(A,b,s,p_order,varargin)
+function [X,errz] = spectral_galerkin(A,b,s,pOrder,varargin)
+%SPECTRAL_GALERKIN Galerkin approximation of solution to A(s)x(s)=b(s).
+%
+% X = spectral_galerkin(A,b,s,pOrder);
+% X = spectral_galerkin(A,b,s,pOrder,...);
+% [X,err] = spectral_galerkin(A,b,s,pOrder,...);
+%
+% The function spectral_galerkin computes the Galerkin approximation to the
+% solution x(s) of the parameterized matrix equation A(s)x(s)=b(s) using a
+% basis of multivariate orthogonal polynomials. 
+%
+% Outputs:
+%   X:          A struct containing the components of the Galerkin 
+%               solution. See below for a more detailed description.
+%
+%   err:        An estimate of the error in the approximation. If pOrder 
+%               is set to 'adapt', then this is a vector of the error 
+%               estimates to examine convergence.
+%
+% Required inputs:
+%   A:          A function handle that can take one of two forms. It
+%               either returns the parameterized matrix evaluated at a
+%               point, e.g. @(s) A(s). Or it returns the action of the
+%               matrix evaluated at a point multiplied by a given vector,
+%               e.g. @(s,v) A(s)*v.
+%
+%   b:          An anonymous function that returns the parameterized right
+%               hand side evaluated at a point, e.g. @(s) b(s).
+%
+%   s:          A vector of parameter structs. The length of s is
+%               considered to be the dimension d of the parameter space. 
+%               See the function parameter.m.
+%
+%   pOrder:     The order of the polynomial approximation. A scalar input
+%               creates a full polynomial basis set for the given 
+%               dimension. A vector input creates a tensor product basis 
+%               set with the order specified for each dimension by the 
+%               components of pOrder. Set this to the string 'adapt' to 
+%               increase the polynomial order of a full polynomial basis
+%               until the chosen error estimate is below a given tolerance.
+%               Finally, this can be an array of columns of nonnegative 
+%               integers of length d representing the multi-indices that
+%               define a multivariate basis polynonmial. See the examples
+%               for more details.
+%
+% Optional inputs:
+% To specify optional inputs, use the 'key/value' format. For example, to
+% set the convergence tolerance 'pTol' to 1e-6, include 'pTol',1e-6 in 
+% the argument list. See the examples below for more details.
+%
+%   qOrder:    Order of tensor product Gaussian quadrature integration 
+%               used to construct the Galerkin system and the right hand 
+%               side. Can be a scalar or a vector of positive integers of
+%               length d. (Default 2*(pOrder+1))
+%
+%   Solver:     An anonymous function of the form @(A,b) solver(A,b) that
+%               solves the constant matrix equation Ax=b. See the examples
+%               for more details. (Default @mldivide)
+%
+%   LowMem:     A flag taking values 0 or 1 that determines how the solver
+%               stores the matrices evaluated at the quadrature points. If
+%               the input 'A' returns a matrix, then LowMem=1 tells the 
+%               code to store each A(lambda) in a cell array, for the 
+%               quadrature points lambda. Otherwise, the code explicitly
+%               forms the Galerkin matrix and solves it with 'Solver'. If
+%               the input 'A' is a matrix vector product interface, then
+%               'LowMem' is ignored. (Default 0)
+%
+%   pTol:       A scalar representing the tolerance for the pOrder='adapt'
+%               option. This is ignored if 'pOrder' is not set to 'adapt'.
+%               (Default 1e-8)
+%
+%   ErrEst:     A string that determines the type of error estimate to use.
+%               The options include: 'relerr' computes the difference 
+%               between the approximation and a reference solution.
+%               'mincoeff' computes the average of the magnitude of the
+%               coefficients associated with the terms of the the two
+%               highest degree. 'resid' uses the inputs 'A' and 'b' to
+%               compute a residual error estimate. (Default 'relerr')
+%
+%   RefSoln:    A struct containing a reference solution to compare against
+%               a computed approximation. If pOrder='adapt', then this is
+%               set as the approximation with 'pOrder' one less than the
+%               current approximation. (Default [])
+%
+%   ParRhs:     A flag taking values 0 or 1 that tells the code to
+%               construct the Galerkin right hand side using the Parallel 
+%               Computing Toolbox. (Default 0)
+%
+%   Verbose:    A flag taking values 0 or 1 that tells the code whether or
+%               not to print detailed status information during the
+%               computation of the approximation. (Default 0)
+%
+% The output struct 'X' contains the following fields.
+%   X.coefficients: An array of size N by # of bases containing the
+%               coefficients of the Galerkin approximation.
+%
+%   X.index_set: An array of size d by # of bases containing the
+%               multi-indicies corresponding to each basis polynomial.
+%
+%   X.variables: The input vector of parameters 's' used to construct the
+%               approximation.
+%
+%   X.fun:      If 'X' is a pseudospectral approximation, this is the
+%               anonymous function used to compute the coefficients.
+%
+%   X.matfun:   If the input 'A' returns a matrix, this is a handle to that
+%               function.
+%
+%   X.vecfun:   A handle to the input 'b'.
+%
+%   X.matvecfun: If the input 'A' returns a matrix-vector multiply, this is
+%               a handle to that function.
+%
+% Example:
+%   A = @(t) [2 t; t 1];                    % 2x2 parameterized matrix
+%   b = @(t) [2; 1];                        % constant right hand side
+%   s = parameter();                        % parameter defined on [-1,1]
+%   pOrder = 13;                            % degree 13 approximation
+%   X = spectral_galerkin(A,b,s,pOrder);
+%   
+% References:
+%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
+%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
+%
+% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov).
 
 if nargin<4, error('Not enough input arguments.'); end
 
@@ -25,26 +151,26 @@ end
 vecfun=b;
 
 % set default values
-qorder=[];
+qOrder=[];
 solver=[];
 lowmem=0;
-ptol=0;
-convtype='relerr'; % types: relerr, mincoeff, resid
+pTol=0;
+errest='relerr'; % types: relerr, mincoeff, resid
 refsoln=[];
 errz=[];
-parallel_rhs=0;
+par_rhs=0;
 verbose=0;
 vprintf = @(varargin) fprintf('spectral_galerkin: %s\n',sprintf(varargin{:}));
 
 for i=1:2:(nargin-4)
     switch lower(varargin{i})
         case 'qorder'
-            qorder=varargin{i+1};
-            if ~isempty(qorder)
-                if isscalar(qorder)
-                    qorder=qorder*ones(1,dim);
+            qOrder=varargin{i+1};
+            if ~isempty(qOrder)
+                if isscalar(qOrder)
+                    qOrder=qOrder*ones(1,dim);
                 else
-                    if length(qorder)~=dim, error('Length of integration order must equal dimension'); end
+                    if length(qOrder)~=dim, error('Length of integration order must equal dimension'); end
                 end
             end
         case 'solver'
@@ -52,13 +178,13 @@ for i=1:2:(nargin-4)
         case 'lowmem'
             lowmem=varargin{i+1};
         case 'ptol'
-            ptol=varargin{i+1};
-        case 'convtype'
-            convtype=lower(varargin{i+1});
+            pTol=varargin{i+1};
+        case 'errest'
+            errest=lower(varargin{i+1});
         case 'refsoln'
             refsoln=varargin{i+1};
-        case 'parallel_rhs'
-            parallel_rhs=varargin{i+1};
+        case 'parrhs'
+            par_rhs=varargin{i+1};
         case 'verbose'
             verbose=varargin{i+1};
         otherwise
@@ -68,71 +194,71 @@ end
 
 if ~verbose, vprintf = @(varargin) []; end
 
-% logic based on p_order
-if isnumeric(p_order)
-    if ptol~=0, warning('The specified polynomial tolerance will be ignored.'); end
-    if isscalar(p_order) % scalar order
-        if isempty(qorder), qorder=2*(p_order+1)*ones(dim,1); end
-        basis=index_set('full',p_order,dim);
-    elseif min(size(p_order))==1 % tensor order
-        if max(size(p_order))~=dim, error('Tensor order must equal dimension.'); end
-        if isempty(qorder), qorder=2*(p_order+1); end
-        basis=index_set('tensor',p_order);
-    elseif size(p_order,1)==dim % a given basis set
-        if isempty(qorder), qorder=2*(max(p_order,[],2)+1); end
-        basis=p_order;
+% logic based on pOrder
+if isnumeric(pOrder)
+    if pTol~=0, warning('pmpack:optionIgnored','The specified polynomial tolerance will be ignored.'); end
+    if isscalar(pOrder) % scalar order
+        if isempty(qOrder), qOrder=2*(pOrder+1)*ones(dim,1); end
+        basis=index_set('full',pOrder,dim);
+    elseif min(size(pOrder))==1 % tensor order
+        if max(size(pOrder))~=dim, error('Tensor order must equal dimension.'); end
+        if isempty(qOrder), qOrder=2*(pOrder+1); end
+        basis=index_set('tensor',pOrder);
+    elseif size(pOrder,1)==dim % a given basis set
+        if isempty(qOrder), qOrder=2*(max(pOrder,[],2)+1); end
+        basis=pOrder;
     else
-        error('Unrecognized p_order.');
+        error('Unrecognized pOrder.');
     end
-elseif isequal(p_order,'adapt')
-    if ptol==0, ptol=1e-8; end
+elseif isequal(pOrder,'adapt')
+    if pTol==0, pTol=1e-8; end
 else
-    error('Unrecognized option for p_order: %s\n',p_order);
+    error('Unrecognized option for pOrder: %s\n',pOrder);
 end
 
 
 
-if isequal(p_order,'adapt')
-    vprintf('using adaptive computation convtype=%s',convtype);
+if isequal(pOrder,'adapt')
+    vprintf('using adaptive computation ErrEst=%s',errest);
     
-    if isequal(convtype,'mincoeff') && ~isempty(refsoln)
-        warning('Reference solution will be ignored.');
+    if isequal(errest,'mincoeff') && ~isempty(refsoln)
+        warning('pmpack:optionIgnored','Reference solution will be ignored.');
     end
     
     if isempty(refsoln)
         vprintf('computing reference solution');
         
         refsoln=spectral_galerkin(A,b,s,0,...
-            'qorder',qorder,'solver',solver,'lowmem',lowmem);
+            'qorder',qOrder,'solver',solver,'lowmem',lowmem);
     end
     
     err=inf; order=1;
-    while err>ptol
+    while err>pTol
         vprintf('adaptive solution order=%i, error=%g\n',order, err);
         X=spectral_galerkin(A,b,s,order,varargin{:});
-        err=error_estimate(convtype,X,refsoln);
+        err=error_estimate(errest,X,refsoln);
         errz(order)=err;
         order=order+1;
-        if isequal(convtype,'relerr'), refsoln=X; end
+        if isequal(errest,'relerr'), refsoln=X; end
     end
 else
-    if any(qorder<(p_order+1))
-        qorder=max(p_order+1,qorder);
+    if any(qOrder<(pOrder+1))
+        qOrder=max(pOrder+1,qOrder);
         warning('pmpack:insufficientOrder',...
             ['Integration order insufficient, ' ...
-             'qorder must be larger than p_order. Using p_order instead.']);
+             'qOrder must be larger than pOrder. Using pOrder instead.']);
     end
     
     vprintf('constructing quadrature rule npolys=%i max_qorder=%i',...
-        prod(qorder+1), max(qorder));
+        prod(qOrder+1), max(qOrder));
     
     % Construct the gauss points and truncated Jacobi eigenvectors needed to
     % form the Galerkin system.
     Q=cell(dim,1);
     for i=1:dim
-        Q{i}=jacobi_eigenvecs(s(i),qorder(i));
+        Q{i}=jacobi_eigenvecs(s(i),qOrder(i));
     end 
-    p=gaussian_quadrature(s,qorder);
+    p=gaussian_quadrature(s,qOrder);
 
     vprintf('constructing generalized quadrature weights nbasis=%i',...
         size(basis,2));
@@ -148,7 +274,7 @@ else
     end
     
     % Construct the Galerkin right hand side.
-    if parallel_rhs
+    if par_rhs
         t0=tic;
         b0 = vecfun(p(1,:));
         dt=toc(t0);
@@ -183,7 +309,7 @@ else
             Gfun=@(v) gmatvec_lowmem(v,Acell,QQ);
             
             if isempty(solver), solver=@(A,b)gmres(A,b); end
-            vprintf('lowmem option matsize=%i solver=%s',...
+            vprintf('LowMem option matsize=%i solver=%s',...
                 length(Grhs),func2str(solver));
             U=solver(Gfun,Grhs);
         else
@@ -211,7 +337,7 @@ else
     end
     vprintf('done');
     
-    % Pack up the solution.
+    % Pack up the solution, dude.
     X.coefficients=reshape(U,N,nbasis);
     X.index_set=basis;
     X.variables=s; 

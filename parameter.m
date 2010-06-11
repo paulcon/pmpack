@@ -1,8 +1,30 @@
 function s = parameter(type,l,r,a,b)
 % PARAMETER Construct a parameter
 %
-% Copyright, Stanford University, 2010
-% Paul G. Constantine, David F. Gleich
+% s = parameter()
+% s = parameter(type,l,r,a,b);
+%
+% A wrapper function that constructs a parameter with a specified weight
+% function as determined by the input string 'type'. The available options
+% for 'type' are
+%   Jacobi:     A parameter supported on the interval [l,r] with a general
+%               Jacobi weight function.
+%
+%   Legendre:   A parameter supported on the interval [l,r] with a uniform
+%               weight function.
+%
+%   Chebyshev:  A parameter supported on the interval [l,r] with a
+%               Chebyshev weight function.
+%
+%   Hermite:    A parameter supported on the interval [-Inf,Inf] with a
+%               standard Gaussian weight function.
+%
+%   Gaussian:   Equivalent to 'Hermite'.
+%
+% See also PARAMETER, HERMITE_PARAMETER, LEGENDRE_PARAMETER
+%
+% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov).
 
 if ~exist('l','var') || isempty(l), l= -1; end
 if ~exist('r','var') || isempty(r), r=  1; end

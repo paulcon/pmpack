@@ -1,17 +1,13 @@
 function Y=sort_bases(X)
-% SORT_BASES Sorts the multivariate bases in order of total degree of basis
-% elements.
+%SORT_BASES Sorts the multivariate bases.
 %
-% Y = sort_bases(X) sorts the basis elements of the expansion X by total 
-% order and order the coefficients to match.
+% Y = sort_bases(X) 
 %
-% See also 
+% Sorts the basis elements of the expansion 'X' by total order and arrange
+% the coefficients to match.
 %
-% Example:
-%   
-%
-% Copyright, Stanford University, 2009
-% Paul G. Constantine, David F. Gleich
+% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov).
 
 s=sum(X.index_set,1);
 [t,ind]=sort(s,'ascend');

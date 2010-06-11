@@ -21,11 +21,11 @@ X=pseudospectral(iAb,s,p_order);
 [X,errz]=pseudospectral(iAb,s,'adapt'); % using default relative error and tolerance
 [X,errz]=pseudospectral(iAb,s,'adapt','ptol',1e-6); % high tolerance
 convtype='mincoeff';
-[X,errz]=pseudospectral(iAb,s,'adapt','ConvType',convtype);
+[X,errz]=pseudospectral(iAb,s,'adapt','ErrEst',convtype);
 
 %% convergence study with residual error estimate
 convtype='resid';
-[X,errz]=pseudospectral(iAb,s,'adapt','ConvType',convtype,'matfun',A,'vecfun',b);
+[X,errz]=pseudospectral(iAb,s,'adapt','ErrEst',convtype,'matfun',A,'vecfun',b);
 
 %% convergence study with a reference solution
 Y=pseudospectral(iAb,s,50);
@@ -57,4 +57,4 @@ solver=@(A,b) pcg(A,b,pcgtol,pcgmaxi,pcon1,pcon2);
 X=spectral_galerkin(Ax,b,s,p_order,'Solver',solver);
 
 %% Convergence study with preconditioning
-[X,errz]=spectral_galerkin(Ax,b,s,'adapt','Solver',solver,'ConvType','resid');
+[X,errz]=spectral_galerkin(Ax,b,s,'adapt','Solver',solver,'ErrEst','resid');
