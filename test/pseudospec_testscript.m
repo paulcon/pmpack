@@ -21,23 +21,18 @@ Y2=pseudospectral(iAb2,s2,10);
 [X,errz]=pseudospectral(iAb2,s2,[5 5]);
 [X,errz]=pseudospectral(iAb2,s2,[5 7]);
 [X,errz]=pseudospectral(iAb,s,'adapt');
-[X,errz]=pseudospectral(iAb,s,'adapt','ConvType','MinCoeff');
-[X,errz]=pseudospectral(iAb2,s2,'adapt','ConvType','MinCoeff');
-[X,errz]=pseudospectral(iAb,s,'adapt','ConvType','RelErr');
-[X,errz]=pseudospectral(iAb2,s2,'adapt','ConvType','RelErr');
+[X,errz]=pseudospectral(iAb,s,'adapt','ErrEst','MinCoeff');
+[X,errz]=pseudospectral(iAb2,s2,'adapt','ErrEst','MinCoeff');
+[X,errz]=pseudospectral(iAb,s,'adapt','ErrEst','RelErr');
+[X,errz]=pseudospectral(iAb2,s2,'adapt','ErrEst','RelErr');
 [X,errz]=pseudospectral(iAb,s,'adapt','RefSoln',Y);
 [X,errz]=pseudospectral(iAb2,s2,'adapt','RefSoln',Y2);
 
-[X,errz]=pseudospectral(iAb,s,'adapt','ConvType','resid','matfun',A,'vecfun',b);
-[X,errz]=pseudospectral(iAb2,s2,'adapt','ConvType','resid','matfun',A2,'vecfun',b2);
+[X,errz]=pseudospectral(iAb,s,'adapt','ErrEst','resid','matfun',A,'vecfun',b);
+[X,errz]=pseudospectral(iAb2,s2,'adapt','ErrEst','resid','matfun',A2,'vecfun',b2);
 
-[X,errz]=pseudospectral(iAb,s,'adapt','ConvType','resid','matvecfun',Ax,'vecfun',b);
-[X,errz]=pseudospectral(iAb2,s2,'adapt','ConvType','resid','matvecfun',Ax2,'vecfun',b2);
-
-matlabpool('open',2);
-[X,errz]=pseudospectral(iAb,s,'adapt','ConvType','RelErr','parallel',1);
-[X,errz]=pseudospectral(iAb2,s2,'adapt','ConvType','RelErr','parallel',1);
-matlabpool('close');
+[X,errz]=pseudospectral(iAb,s,'adapt','ErrEst','resid','matvecfun',Ax,'vecfun',b);
+[X,errz]=pseudospectral(iAb2,s2,'adapt','ErrEst','resid','matvecfun',Ax2,'vecfun',b2);
 
 
 
