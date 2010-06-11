@@ -232,7 +232,7 @@ N=length(v)/m;
 X=reshape(v,N,m);
 X=X*Q;
 refsoln=zeros(N,n);
-for i=1:n
+parfor i=1:n
     refsoln(:,i)=Amats{i}*X(:,i);
 end
 Z=refsoln*Q';
@@ -247,7 +247,7 @@ N=length(v)/m;
 X=reshape(v,N,m);
 X=X*Q;
 refsoln=zeros(N,n);
-for i=1:n
+parfor i=1:n
     refsoln(:,i)=Ax(p(i,:),X(:,i));
 end
 Z=refsoln*Q';
