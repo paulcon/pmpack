@@ -1,10 +1,10 @@
-function P = evaluate_ops(s,n,point)
-% EVALUATE_OPS Evaluate the n-vector of orthonormal polynomials at a point.
+function P = evaluate_ops(s,n,points)
+%EVALUATE_OPS Evaluate the n-vector of orthonormal polynomials at a point
 %
-% P = evaluate_ops(x,n,point) 
+% P = evaluate_ops(s,n,points) 
 %
 % Returns a vector of the first n orthonormal polynomials evaluated at 
-% point.
+% point or a set of points
 %
 % Inputs:
 %   s     : parameter struct
@@ -13,25 +13,34 @@ function P = evaluate_ops(s,n,point)
 %
 % Outputs:
 %   P     : a vector of orthonormal polynomials evaluated at a point.
-% 
-% References:
-%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
-%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
 %
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
-% Constantine (pconsta@sandia.gov).
+% Example:
+%   % plot the first 5 Legendre polynomials
+%   xx = [-1:0.1:1]; % generate a grid
+%   P = evaluate_ops(parameter,5,xx); % evaluate on xx
+%   plot(xx,P'); % plot
+%
+% See also EVALUATE_EXPANSION 
+
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
+%
+% History
+% -------
+% :2010-06-14: Initial release
 
 assert(n>0, 'Please ensure n>0.');
 assert(max(size(s))==1, 'Works for single parameters.'); 
 
-P=zeros(n,1);
+P=zeros(n,length(points));
 ab=s.recur(n);
-P(1)=1/sqrt(ab(1,2));
+P(1,:)=1/sqrt(ab(1,2));
 if n==1; return; end
-P(2)=(point-ab(1,1))/sqrt(ab(2,2));
+P(2,:)=(points(:)'-ab(1,1))./sqrt(ab(2,2));
 if n==2; return; end
 for i=3:n
-    P(i)=((point-ab(i-1,1))*P(i-1)-sqrt(ab(i-1,2))*P(i-2))/sqrt(ab(i,2));
+    P(i,:)=((points(:)'-ab(i-1,1)).*P(i-1,:)-sqrt(ab(i-1,2))*P(i-2,:))./sqrt(ab(i,2));
 end
 
 

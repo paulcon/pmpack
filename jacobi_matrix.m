@@ -1,5 +1,5 @@
 function J=jacobi_matrix(s,n)
-% JACOBI_MATRIX Construct a Jacobi matrix for a parameter.
+%JACOBI_MATRIX Construct a Jacobi matrix for a parameter
 %
 % J = jacobi_matrix(s,n)
 %
@@ -12,8 +12,14 @@ function J=jacobi_matrix(s,n)
 %   s = legendre_parameter();
 %   J = jacobi_matrix(s,5);
 %
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
-% Constantine (pconsta@sandia.gov).
+% See also JACOBI_EIGENVECS JACOBI_MATRIX
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
+%
+% History
+% -------
+% :2010-06-14: Initial release
 
 if ~isstruct(s) && (~exist('n','var') || isempty(n)), n=size(s,1); end
 if isstruct(s)

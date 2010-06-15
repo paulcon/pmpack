@@ -1,5 +1,5 @@
 function r=residual_error_estimate(X,Av,bfun)
-%RESIDUAL_ERROR_ESTIMATE Computes residual error estimate.
+%RESIDUAL_ERROR_ESTIMATE Computes residual error estimate
 %
 % r = residual_error_estimate(X)
 % r = residual_error_estimate(X,Av,b)
@@ -7,12 +7,14 @@ function r=residual_error_estimate(X,Av,bfun)
 % Computes the residual error estimate of the approximation 'X' using the
 % operators A(s) and b(s). 
 %
-% References:
-%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
-%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
+% See also ERROR_ESTIMATE MINIMUM_COEFFICIENT
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
 %
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
-% Constantine (pconsta@sandia.gov).
+% History
+% -------
+% :2010-06-14: Initial release
 
 if nargin==1
     if ~isempty(X.matvecfun)
@@ -43,15 +45,9 @@ gauss_order=4*(expansion_order+1);
 [p,w]=gaussian_quadrature(X.variables,gauss_order);
 
 r=0;
-if matlabpool('size')
-    parfor i=1:size(p,1)
-        u=evaluate_expansion(X,p(i,:));
-        r=r+norm(Ax(p(i,:),u)-b(p(i,:)),2)^2*w(i);
-    end
-else
-    for i=1:size(p,1)
-        u=evaluate_expansion(X,p(i,:));
-        r=r+norm(Ax(p(i,:),u)-b(p(i,:)),2)^2*w(i);
-    end
+parfor i=1:size(p,1)
+    u=evaluate_expansion(X,p(i,:));
+    r=r+norm(Ax(p(i,:),u)-b(p(i,:)),2)^2*w(i); %#ok<PFBNS>
 end
+
 r=sqrt(r)/size(X.coefficients,1);

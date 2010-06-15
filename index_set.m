@@ -1,5 +1,5 @@
 function I = index_set(type,order,dim,constraint)
-%INDEX_SET Builds the multi-indicies for orthogonal polynomials.
+%INDEX_SET Builds the multi-indicies for orthogonal polynomials
 %
 % I = index_set(type,order)
 % I = index_set(type,order,dimension)
@@ -29,10 +29,22 @@ function I = index_set(type,order,dim,constraint)
 %               multi-index as its argument and return a number to be
 %               compared to the given order. For example, the constraint
 %               for the full polynomial basis is @(index) sum(index).
-%   
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
-% Constantine (pconsta@sandia.gov).
+%
+% Example:
+%   % construct a total order basis
+%   I = index_set('total order',4,2);
+%   P = pmpack_problem('twobytwo','dim',2);
+%   X = spectral_galerkin(P.A,P.b,P.s,I);
+%
+% See also SPECTRAL_GALERKIN   
 
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
+%
+% History
+% -------
+% :2010-06-14: Initial release
 
 if ~exist('dim','var') || isempty(dim) 
     dim=length(order);
@@ -64,7 +76,7 @@ elseif isequal(type,'constrained')
         index=zeros(1,dim); limit=order*ones(1,dim);
         while any(index(:)<limit(:))
             if constraint(index(:))<=order
-                I=[I index(:)];
+                I=[I index(:)]; %#ok<AGROW>
             end
             index=increment(index,limit);
         end

@@ -1,5 +1,5 @@
 function s = parameter(type,l,r,a,b)
-% PARAMETER Construct a parameter
+%PARAMETER Construct a parameter with a uniform weight function
 %
 % s = parameter()
 % s = parameter(type,l,r,a,b);
@@ -22,9 +22,14 @@ function s = parameter(type,l,r,a,b)
 %   Gaussian:   Equivalent to 'Hermite'.
 %
 % See also PARAMETER, HERMITE_PARAMETER, LEGENDRE_PARAMETER
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
 %
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
-% Constantine (pconsta@sandia.gov).
+% History
+% -------
+% :2010-06-14: Initial release
+
 
 if ~exist('l','var') || isempty(l), l= -1; end
 if ~exist('r','var') || isempty(r), r=  1; end

@@ -1,5 +1,5 @@
 function [p,w]=gaussian_quadrature(s,n,gridflag)
-% GAUSSRULE Compute a Gaussian quadrature rule
+%GAUSSIAN_QUADRATURE Compute a Gaussian quadrature rule
 % 
 % [p,w] = gaussian_quadrature(parameter(),n);
 % [p,w] = gaussian_quadrature([parameter(),parameter()],n);
@@ -42,8 +42,11 @@ function [p,w]=gaussian_quadrature(s,n,gridflag)
 %   for i=1:size(p,1)
 %       fint = fint + f(p(i,:))*w(i);
 %   end
-%   
+%   fint
+%   quad2d(@(X,Y) sin(pi.*X)+cos(pi.*Y),-1,1,-1,1) % compare with matlab quad
 %
+% See also PARAMETER JACOBI_PARAMETER HERMITE_PARAMETER 
+
 % Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
 % Constantine (pconsta@sandia.gov).
 

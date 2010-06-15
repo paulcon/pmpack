@@ -10,9 +10,14 @@ function s = jacobi_parameter(l,r,a,b)
 % [-1,1].
 %
 % See also PARAMETER, HERMITE_PARAMETER, LEGENDRE_PARAMETER
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
 %
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
-% Constantine (pconsta@sandia.gov).
+% History
+% -------
+% :2010-06-14: Initial release
+
 
 if ~exist('l','var') || isempty(l), l= -1; end
 if ~exist('r','var') || isempty(r), r=  1; end

@@ -3,6 +3,7 @@ function test_main
 galerkin_testscript;
 pseudospec_testscript;
 utils_testscript;
+examples_test;
 
 % more exhaustive tests
 pagerank_tests

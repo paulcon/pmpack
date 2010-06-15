@@ -1,5 +1,5 @@
 function Q=jacobi_eigenvecs(s,n)
-% JACOBI_EIGENVECS Construct the eigenvectors of the Jacobi matrix.
+%JACOBI_EIGENVECS Construct the eigenvectors of the Jacobi matrix
 %
 % Q = jacobi_eigenvecs(s,n)
 %
@@ -12,11 +12,17 @@ function Q=jacobi_eigenvecs(s,n)
 %   s = legendre_parameter();
 %   Q = jacobi_eigenvecs(s,5);
 %
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
-% Constantine (pconsta@sandia.gov).
+% See also JACOBI_PARAMETER JACOBI_MATRIX
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
+%
+% History
+% -------
+% :2010-06-14: Initial release
 
 
 J=jacobi_matrix(s,n);
 [Q,D]=eig(J);
-[D,I]=sort(diag(D));
+[D,I]=sort(diag(D)); %#ok<ASGLU>
 Q=Q(:,I);

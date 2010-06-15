@@ -1,5 +1,5 @@
 function e = error_estimate(type,X,Y)
-%ERROR_ESTIMATE Estimates the error of a given polynomial approximation.
+%ERROR_ESTIMATE Estimates the error of a given polynomial approximation
 %
 % e = error_estimate(type,X) 
 % e = error_estimate('relerr',X,Y) 
@@ -20,13 +20,19 @@ function e = error_estimate(type,X,Y)
 %   'RelErr':   Computes the difference between the solution 'X' and a
 %               reference solution 'Y'. 
 % 
+% Example: 
+%   P = pmpack_problem('twobytwo');
+%   X = spectral_galerkin(P.A,P.b,P.s,2);
+%   error_estimate('Resid',X)
 % 
-% References:
-%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
-%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
-%
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% See also EVALUTE_EXPANSION RESIDUAL_ERROR_ESTIMATE MINIMUM_COEFFICIENT
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
 % Constantine (pconsta@sandia.gov)
+%
+% History
+% -------
+% :2010-06-14: Initial release
 
 
 if nargin<2, error('Not enough inputs.'); end
@@ -38,7 +44,7 @@ switch lower(type)
         end
         
         % assumes basis of X is subset of basis of Y
-        [Nx,nx]=size(X.coefficients); [Ny,ny]=size(Y.coefficients);
+        [Nx,nx]=size(X.coefficients); ny=size(Y.coefficients,2);
         if nx>ny, T=X; X=Y; Y=T; clear T; t=nx; nx=ny; ny=t; end
         
         e=0;

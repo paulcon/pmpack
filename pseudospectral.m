@@ -1,5 +1,5 @@
 function [X,errz] = pseudospectral(iAb,s,pOrder,varargin)
-%PSEUDOSPECTRAL Pseudospectral approximation of solution to A(s)x(s)=b(s).
+%PSEUDOSPECTRAL Pseudospectral approximation of solution to A(s)x(s)=b(s)
 %
 % X = pseudospectral(iAb,s,pOrder);
 % X = pseudospectral(iAb,s,pOrder,...);
@@ -96,6 +96,10 @@ function [X,errz] = pseudospectral(iAb,s,pOrder,varargin)
 %   X.matvecfun: The function handle that returns the matrix at a given
 %               point in the parameter space multiplied by a given vector.
 %
+% References:
+%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
+%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
+%
 % Example:
 %   A = @(t) [2 t; t 1];                    % 2x2 parameterized matrix
 %   b = @(t) [2; 1];                        % constant right hand side
@@ -104,12 +108,15 @@ function [X,errz] = pseudospectral(iAb,s,pOrder,varargin)
 %   pOrder = 13;                            % degree 13 approximation
 %   X = pseudospectral(iAb,s,pOrder);
 %   
-% References:
-%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
-%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
+% See also SPECTRAL_GALERKIN
+
 %
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
-% Constantine (pconsta@sandia.gov).
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
+%
+% History
+% -------
+% :2010-06-14: Initial release
 
 if nargin<3, error('Not enough input arguments.'); end
 
@@ -146,7 +153,10 @@ end
 
 % Check to see whether or not we do a convergence study.
 if isnumeric(pOrder)
-    if ptol~=0, warning('The specified polynomial tolerance will be ignored.'); end
+    if ptol~=0, 
+        warning('pmpack:ignored',...
+            'The specified polynomial tolerance will be ignored.'); 
+    end
     if isscalar(pOrder) 
         pOrder=pOrder*ones(dim,1); 
     else
@@ -160,7 +170,7 @@ end
 
 if isequal(pOrder,'adapt')
     if isequal(errest,'mincoeff') && ~isempty(refsoln)
-        warning('Reference solution will be ignored.');
+        warning('pmpack:ignored','Reference solution will be ignored.');
     end
     
     if isempty(refsoln)
@@ -170,7 +180,7 @@ if isequal(pOrder,'adapt')
     
     err=inf; order=1;
     while err>ptol
-        X=pseudospectral(iAb,s,order,...
+        X=pseudospectral(iAb,s,order,varargin{:},...
             'matfun',matfun,'vecfun',vecfun,'matvecfun',matvecfun);
         err=error_estimate(errest,X,refsoln);
         errz(order)=err;
@@ -197,7 +207,7 @@ else
     Uc=zeros(N,gn);
     Uc(:,1) = u0;
     parfor i=2:gn
-        Uc(:,i) = q0(i)*iAb(p(i,:));
+        Uc(:,i) = q0(i)*iAb(p(i,:)); %#ok<PFBNS>
     end
     
     % in theory, Matlab can do these inplace.

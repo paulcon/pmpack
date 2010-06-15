@@ -1,5 +1,5 @@
 function [r,basis]=evaluate_expansion(X,p)
-% EVALUATE_EXPANSION Evaluates a polynomial expansion at a point.
+%EVALUATE_EXPANSION Evaluates a polynomial expansion at a point
 %
 % r = evaluate_expansion(X,p);
 % [r,basis] = evaluate_expansion(X,p);
@@ -8,12 +8,26 @@ function [r,basis]=evaluate_expansion(X,p)
 % approximation. The input 'p' is a point in the parameter space to
 % evaluate the approximation.
 %
-% References:
-%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
-%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
+% Example:
+%   % display a response surface
+%   P = pmpack_problem('twobytwo');
+%   X = pseudospectral(P.solve,P.s,5);
+%   pts = [-1:0.01:1]; fvals_est=zeros(2,length(pts)); fvals_true=fvals_est;
+%   for i=1:length(pts)
+%     fvals_true(:,i) = P.solve(pts(i));
+%     fvals_est(:,i) = evaluate_expansion(X,pts(i));
+%   end
+%   plot(pts,fvals_true,'k-',pts,fvals_est,'r-');
 %
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% See also ERROR_ESTIMATE EVALUATE_OPS
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
 % Constantine (pconsta@sandia.gov)
+%
+% History
+% -------
+% :2010-06-14: Initial release
+
 
 s=X.variables;
 

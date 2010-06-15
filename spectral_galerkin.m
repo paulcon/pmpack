@@ -1,5 +1,5 @@
 function [X,errz] = spectral_galerkin(A,b,s,pOrder,varargin)
-%SPECTRAL_GALERKIN Galerkin approximation of solution to A(s)x(s)=b(s).
+%SPECTRAL_GALERKIN Galerkin approximation of solution to A(s)x(s)=b(s)
 %
 % X = spectral_galerkin(A,b,s,pOrder);
 % X = spectral_galerkin(A,b,s,pOrder,...);
@@ -112,19 +112,28 @@ function [X,errz] = spectral_galerkin(A,b,s,pOrder,varargin)
 %   X.matvecfun: If the input 'A' returns a matrix-vector multiply, this is
 %               a handle to that function.
 %
+% References:
+%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'A factorization of 
+%       the spectral Galerkin system for parameterized matrix equations: 
+%       Derivation and applications'. arXiv: , 2010.
+%
 % Example:
 %   A = @(t) [2 t; t 1];                    % 2x2 parameterized matrix
 %   b = @(t) [2; 1];                        % constant right hand side
 %   s = parameter();                        % parameter defined on [-1,1]
 %   pOrder = 13;                            % degree 13 approximation
 %   X = spectral_galerkin(A,b,s,pOrder);
-%   
-% References:
-%   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
-%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
 %
-% Copyright 2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
-% Constantine (pconsta@sandia.gov).
+% See also PSEUDOSPECTRAL
+
+
+% Copyright 2009-2010 David F. Gleich (dfgleic@sandia.gov) and Paul G. 
+% Constantine (pconsta@sandia.gov)
+%
+% History
+% -------
+% :2010-06-14: Initial release
+
 
 if nargin<4, error('Not enough input arguments.'); end
 
@@ -205,8 +214,9 @@ if isnumeric(pOrder)
         if isempty(qOrder), qOrder=2*(pOrder+1); end
         basis=index_set('tensor',pOrder);
     elseif size(pOrder,1)==dim % a given basis set
-        if isempty(qOrder), qOrder=2*(max(pOrder,[],2)+1); end
         basis=pOrder;
+        pOrder=max(pOrder,[],2);
+        if isempty(qOrder), qOrder=2*(pOrder+1); end
     else
         error('Unrecognized pOrder.');
     end
@@ -228,8 +238,7 @@ if isequal(pOrder,'adapt')
     if isempty(refsoln)
         vprintf('computing reference solution');
         
-        refsoln=spectral_galerkin(A,b,s,0,...
-            'qorder',qOrder,'solver',solver,'lowmem',lowmem);
+        refsoln=spectral_galerkin(A,b,s,0,varargin{:});
     end
     
     err=inf; order=1;
@@ -237,7 +246,7 @@ if isequal(pOrder,'adapt')
         vprintf('adaptive solution order=%i, error=%g\n',order, err);
         X=spectral_galerkin(A,b,s,order,varargin{:});
         err=error_estimate(errest,X,refsoln);
-        errz(order)=err;
+        errz(order)=err; %#ok<AGROW>
         order=order+1;
         if isequal(errest,'relerr'), refsoln=X; end
     end
@@ -374,7 +383,7 @@ X=reshape(v,N,m);
 X=X*Q;
 refsoln=zeros(N,n);
 parfor i=1:n
-    refsoln(:,i)=Ax(p(i,:),X(:,i));
+    refsoln(:,i)=Ax(p(i,:),X(:,i)); %#ok<PFBNS>
 end
 Z=refsoln*Q';
 z=Z(:);
