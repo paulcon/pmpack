@@ -80,7 +80,7 @@ elseif isequal(type,'constrained')
             end
             index=increment(index,limit);
         end
-        if constraint(limit(:)), I=[I limit(:)]; end
+        if constraint(limit(:))<=order, I=[I limit(:)]; end
     end
 else 
     error('Unrecognized type: %s',type);
