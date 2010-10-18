@@ -32,7 +32,8 @@
 % References
 % ----------
 %   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
-%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
+%       Parameterized Matrix Equations'. SIMAX, 2010.
+%       http://dx.doi.org/10.1137/090755965
 %
 %   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'A factorization of 
 %       the spectral Galerkin system for parameterized matrix equations: 

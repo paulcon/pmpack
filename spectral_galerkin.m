@@ -48,7 +48,7 @@ function [X,errz] = spectral_galerkin(A,b,s,pOrder,varargin)
 % set the convergence tolerance 'pTol' to 1e-6, include 'pTol',1e-6 in 
 % the argument list. See the examples below for more details.
 %
-%   qOrder:    Order of tensor product Gaussian quadrature integration 
+%   qOrder:     Order of tensor product Gaussian quadrature integration 
 %               used to construct the Galerkin system and the right hand 
 %               side. Can be a scalar or a vector of positive integers of
 %               length d. (Default 2*(pOrder+1))
