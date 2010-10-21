@@ -98,22 +98,24 @@ X.index_set = [0 1 2];
 %
 % We'll leave the next step to you to check, but
 %
-%  $$s_1(x) = 2*x + x^2 = 1/3*P_0(x) + 2/sqrt(3)*P_1(x) + sqrt(4/45)*P_2(x)$$
+% $$s_1(x) = 2*x + x^2 = 1/3*P_0(x) + 2/sqrt(3)*P_1(x) + sqrt(4/45)*P_2(x)$$
 %
 % and
 %
-%  $$s_2(x) = -x^2 + 2 = 5/3*P_0(x) - sqrt(4/45)*P_2(x)$$
+% $$s_2(x) = -x^2 + 2 = 5/3*P_0(x) - sqrt(4/45)*P_2(x)$$
 %
 % in which case, we can tell pmpack that we want these combinations
-% of P_0, P_1, and P_2 with
+% of $P_0$, $P_1$, and $P_2$ with
 
 X.coefficients = [1/3 2/sqrt(3) sqrt(4/45); % for s_1
                   2-1/3 0 -sqrt(4/45) ];    % for s_2
               
 %%
 % The relationship between X.coefficients and X.index_set is:
-%   x(1) = sum over i
+%
+%    x(1) = sum over i
 %            X.coefficients(1,i)*orthogonal_polynomial(X.index_set(i))
+%
 % so the index set controls which orthogonal polynomial, and the
 % the coefficients control how much of that polynomial.
    
@@ -163,7 +165,8 @@ X.variables = [legendre_parameter()];
 X.index_set = 1:k;
 X.coefficients = eye(k);
 [x,y]=fplot(@(x) evaluate_expansion(X,x)', [-1,1]); 
-
+plot(x,y,'b.','MarkerSize',0.5);
+ylim([-5,5]); axis off;
 
 
 %%
