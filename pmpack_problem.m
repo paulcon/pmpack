@@ -31,6 +31,6 @@ function P=pmpack_problem(pname,varargin)
 
 fullpath = mfilename('fullpath');
 filepath = fileparts(fullpath);
-probdir = fullfile(filepath,'problems');
+probdir = fullfile(filepath,'demo');
 addpath(probdir);
 P = feval(pname,varargin{:});

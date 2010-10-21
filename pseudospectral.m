@@ -31,7 +31,7 @@ function [X,errz] = pseudospectral(iAb,s,pOrder,varargin)
 %               dimension of all the same order. A vector input creates a 
 %               tensor product basis set with the order specified for each 
 %               dimension by the components of pOrder. Set this to the 
-%               string 'adapt' to increase the polynomial order of a full 
+%               string 'adapt' to increase the polynomial order of a tensor 
 %               polynomial basis until the chosen error estimate is below a
 %               given tolerance.
 %
@@ -48,8 +48,8 @@ function [X,errz] = pseudospectral(iAb,s,pOrder,varargin)
 %               The options include: 'relerr' computes the difference 
 %               between the approximation and a reference solution.
 %               'mincoeff' computes the average of the magnitude of the
-%               coefficients associated with the terms of the the two
-%               highest degree. 'resid' uses the inputs 'A' and 'b' to
+%               coefficients associated with the terms of the two
+%               highest degrees. 'resid' uses the inputs 'A' and 'b' to
 %               compute a residual error estimate. (Default 'relerr')
 %
 %   RefSoln:    A struct containing a reference solution to compare against
@@ -98,7 +98,8 @@ function [X,errz] = pseudospectral(iAb,s,pOrder,varargin)
 %
 % References:
 %   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'Spectral Methods for
-%       Parameterized Matrix Equations'. arXiv:0904.2040v1, 2009.
+%       Parameterized Matrix Equations'. SIMAX, 2010.
+%       http://dx.doi.org/10.1137/090755965
 %
 % Example:
 %   A = @(t) [2 t; t 1];                    % 2x2 parameterized matrix
@@ -129,10 +130,12 @@ refsoln=[];
 matfun=[];
 vecfun=[];
 matvecfun=[];
+verbose=0;
+vprintf = @(varargin) fprintf('pseudospectral: %s\n',sprintf(varargin{:}));
 
 errz=[];
 
-for i=1:2:(nargin-3)
+for i=1:2:length(varargin)-1
     switch lower(varargin{i})
         case 'ptol'
             ptol=varargin{i+1};
@@ -146,17 +149,17 @@ for i=1:2:(nargin-3)
             vecfun=varargin{i+1};
         case 'matvecfun'
             matvecfun=varargin{i+1};
+        case 'verbose'
+            verbose=varargin{i+1};
         otherwise
             error('Unrecognized option: %s\n',varargin{i});
     end
 end
 
+if ~verbose, vprintf = @(varargin) []; end
+
 % Check to see whether or not we do a convergence study.
 if isnumeric(pOrder)
-    if ptol~=0, 
-        warning('pmpack:ignored',...
-            'The specified polynomial tolerance will be ignored.'); 
-    end
     if isscalar(pOrder) 
         pOrder=pOrder*ones(dim,1); 
     else
@@ -169,17 +172,23 @@ else
 end
 
 if isequal(pOrder,'adapt')
+    vprintf('using adaptive computation ErrEst=%s',errest);
+    
     if isequal(errest,'mincoeff') && ~isempty(refsoln)
         warning('pmpack:ignored','Reference solution will be ignored.');
     end
     
     if isempty(refsoln)
+        vprintf('computing reference solution');
+        
         refsoln=pseudospectral(iAb,s,0,...
             'matfun',matfun,'vecfun',vecfun,'matvecfun',matvecfun);
     end
     
     err=inf; order=1;
     while err>ptol
+        vprintf('adaptive solution order=%i, error=%g\n',order, err);
+        
         X=pseudospectral(iAb,s,order,varargin{:},...
             'matfun',matfun,'vecfun',vecfun,'matvecfun',matvecfun);
         err=error_estimate(errest,X,refsoln);
@@ -188,6 +197,9 @@ if isequal(pOrder,'adapt')
         if isequal(errest,'relerr'), refsoln=X; end
     end
 else
+    vprintf('constructing quadrature rule npoints=%i, max_porder=%i',...
+        prod(pOrder+1), max(pOrder));
+    
     % Construct the array of dim dimensional gauss points and the eigenvector
     % matrix of the multivariate Jacobi matrix.
     Q=cell(dim,1);
@@ -206,9 +218,11 @@ else
     gn=prod(pOrder+1);
     Uc=zeros(N,gn);
     Uc(:,1) = u0;
+    vprintf('evaluating solution at %i points with parfor',gn);
     parfor i=2:gn
         Uc(:,i) = q0(i)*iAb(p(i,:)); %#ok<PFBNS>
     end
+    vprintf('evaluation complete');
     
     % in theory, Matlab can do these inplace.
     Uc = Uc';
@@ -225,7 +239,13 @@ else
     X.vecfun=vecfun;
     X.matvecfun=matvecfun;
     X=sort_bases(X);
+    
+    if nargout==2
+        errz=error_estimate('MinCoeff',X);
+    end
+    
 end
+vprintf('done');
 
 end
 

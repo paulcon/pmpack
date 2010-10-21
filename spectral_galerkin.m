@@ -48,7 +48,7 @@ function [X,errz] = spectral_galerkin(A,b,s,pOrder,varargin)
 % set the convergence tolerance 'pTol' to 1e-6, include 'pTol',1e-6 in 
 % the argument list. See the examples below for more details.
 %
-%   qOrder:    Order of tensor product Gaussian quadrature integration 
+%   qOrder:     Order of tensor product Gaussian quadrature integration 
 %               used to construct the Galerkin system and the right hand 
 %               side. Can be a scalar or a vector of positive integers of
 %               length d. (Default 2*(pOrder+1))
@@ -64,7 +64,7 @@ function [X,errz] = spectral_galerkin(A,b,s,pOrder,varargin)
 %               quadrature points lambda. Otherwise, the code explicitly
 %               forms the Galerkin matrix and solves it with 'Solver'. If
 %               the input 'A' is a matrix vector product interface, then
-%               'LowMem' is ignored. (Default 0)
+%               'LowMem' is ignored. (Default 1)
 %
 %   pTol:       A scalar representing the tolerance for the pOrder='adapt'
 %               option. This is ignored if 'pOrder' is not set to 'adapt'.
@@ -115,7 +115,7 @@ function [X,errz] = spectral_galerkin(A,b,s,pOrder,varargin)
 % References:
 %   Constantine, P.G., Gleich, D.F., Iaccarino, G. 'A factorization of 
 %       the spectral Galerkin system for parameterized matrix equations: 
-%       Derivation and applications'. arXiv: , 2010.
+%       derivation and applications'. arXiv:1006.3053v1, 2010.
 %
 % Example:
 %   A = @(t) [2 t; t 1];                    % 2x2 parameterized matrix
@@ -205,7 +205,6 @@ if ~verbose, vprintf = @(varargin) []; end
 
 % logic based on pOrder
 if isnumeric(pOrder)
-    if pTol~=0, warning('pmpack:optionIgnored','The specified polynomial tolerance will be ignored.'); end
     if isscalar(pOrder) % scalar order
         if isempty(qOrder), qOrder=2*(pOrder+1)*ones(dim,1); end
         basis=index_set('full',pOrder,dim);
@@ -355,6 +354,11 @@ else
     X.vecfun=vecfun;
     X.matvecfun=matvecfun;
     X=sort_bases(X);
+    
+    if nargout==2
+        errz=error_estimate('MinCoeff',X);
+    end
+    
 end
 
 end
