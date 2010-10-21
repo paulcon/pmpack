@@ -64,7 +64,11 @@ if isequal(type,'tensor')
     I=I';
 elseif isequal(type,'full') || isequal(type,'complete') || isequal(type,'total order')
     if ~isscalar(order), error('Order must be a scalar for constrained index set.'); end
-    I=full_index_set(order,dim); I=I';
+    I=zeros(dim,1);
+    for i=1:order
+        II=full_index_set(i,dim);
+        I=[I II']; %#ok<AGROW>
+    end
 elseif isequal(type,'constrained')
     if ~exist('constraint','var') || isempty(constraint), error('No constraint provided.'); end
     if ~isscalar(order), error('Order must be a scalar for constrained index set.'); end
@@ -72,35 +76,20 @@ elseif isequal(type,'constrained')
         I=zeros(dim,1);
     else
         I=[];
-        index=zeros(1,dim); limit=order*ones(1,dim);
-        while any(index(:)<limit(:))
-            if constraint(index(:))<=order
-                I=[I index(:)]; %#ok<AGROW>
+        limit=order*ones(1,dim)+1;
+        basis = cell(1,length(limit));
+        for i=1:prod(limit)
+            [basis{:}] = ind2sub(limit,i);
+            b = cell2mat(basis)'-1;
+            if constraint(b) <= order
+                I=[I b];%#ok<AGROW>
             end
-            index=increment(index,limit);
         end
-        if constraint(limit(:))<=order, I=[I limit(:)]; end
     end
 else 
     error('Unrecognized type: %s',type);
 end
 
-end
-
-function r = increment(index, limit)
-
-dimension = length(index);
-
-for i=dimension:-1:1
-    if (index(i) < limit(i))
-        index(i) = index(i) + 1;
-        break;
-    else
-        index(i) = 0;
-    end 
-end
-
-r = index;
 end
 
 function I = full_index_set(n,d)
@@ -113,7 +102,7 @@ else
         II=full_index_set(n-i,d-1);
         m=size(II,1);
         T=[i*ones(m,1) II];
-        I=[I; T];
+        I=[I; T]; %#ok<AGROW>
     end
 end
 end
