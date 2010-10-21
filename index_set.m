@@ -64,8 +64,7 @@ if isequal(type,'tensor')
     I=I';
 elseif isequal(type,'full') || isequal(type,'complete') || isequal(type,'total order')
     if ~isscalar(order), error('Order must be a scalar for constrained index set.'); end
-    constraint=@(a) sum(a);
-    I=index_set('constrained',order,dim,constraint);
+    I=full_index_set(order,dim); I=I';
 elseif isequal(type,'constrained')
     if ~exist('constraint','var') || isempty(constraint), error('No constraint provided.'); end
     if ~isscalar(order), error('Order must be a scalar for constrained index set.'); end
@@ -86,6 +85,8 @@ else
     error('Unrecognized type: %s',type);
 end
 
+end
+
 function r = increment(index, limit)
 
 dimension = length(index);
@@ -100,3 +101,19 @@ for i=dimension:-1:1
 end
 
 r = index;
+end
+
+function I = full_index_set(n,d)
+
+if d==1,
+    I=n;
+else
+    I=[];
+    for i=0:n
+        II=full_index_set(n-i,d-1);
+        m=size(II,1);
+        T=[i*ones(m,1) II];
+        I=[I; T];
+    end
+end
+end
