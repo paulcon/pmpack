@@ -1,0 +1,278 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      --><title>A Parameterized Elliptic Partial Differential Equation</title><meta name="generator" content="MATLAB 7.9"><meta name="date" content="2010-10-21"><meta name="m-file" content="elliptic_demo"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h1>A Parameterized Elliptic Partial Differential Equation</h1><!--introduction--><p>We examine a linear elliptic partial differential equation in two spatial dimensions with homogeneous Dirichlet boundary conditions and parameterized scalar coefficients. For <img src="elliptic_demo_eq01214.png" alt="$x\in\mathcal{D}=[-1,1]^2$">, let <img src="elliptic_demo_eq49665.png" alt="$u(x)$"> satisfy</p><p><img src="elliptic_demo_eq25075.png" alt="$$\nabla\cdot(\alpha\nabla u) = f$$"></p><p>with <img src="elliptic_demo_eq45348.png" alt="$u=0$"> on <img src="elliptic_demo_eq91204.png" alt="$\partial\mathcal{D}$">, where <img src="elliptic_demo_eq47547.png" alt="$f=\cos(x)\sin(x)$"> is the forcing function, and</p><p><img src="elliptic_demo_eq83373.png" alt="$$\log(\alpha) = \log(\alpha(x,s)) = \sum_{k=1}^n \phi_k(x)\sigma_ks_k$$"></p><p>is the parameterized coefficient representing a truncated Karhunen-Loeve expansion of a random field with covariance function</p><p><img src="elliptic_demo_eq75582.png" alt="$$C(x_1,x_2) = \gamma\exp\left(\frac{-\|x_1-x_2\|^2}{2c}\right).$$"></p><p>The parameter <img src="elliptic_demo_eq41477.png" alt="$\gamma$"> scales the magnitude of the random field, and <img src="elliptic_demo_eq27869.png" alt="$c$"> controls the correlation length. For more details on this problem, see Nobile, et al. (SINUM, 2008a) and references therein.</p><p>Using MATLAB's PDE Toolbox, we discretize this problem in space on an irregular mesh. This results in a parameterized matrix equation</p><p><img src="elliptic_demo_eq48998.png" alt="$$\mathbf{A}(s)\mathbf{x}(s) = \mathbf{b}$$"></p><p>where <img src="elliptic_demo_eq68018.png" alt="$\mathbf{A}(s)$"> is the parameterized stiffness matrix. We will use PMPack to construct a multivariate polynomial approximation to the solution <img src="elliptic_demo_eq67897.png" alt="$\mathbf{x}(s)$">.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Construct The Problem</a></li><li><a href="#4">Construct a Spectral Galerkin Approximation</a></li><li><a href="#5">Coefficient Decay</a></li><li><a href="#6">Surface Plot of Mean and Variance</a></li><li><a href="#7">Using a Preconditioner</a></li><li><a href="#8">Construct a Pseudospectral Approximation</a></li></ul></div><h2>Construct The Problem<a name="1"></a></h2><p>We set the truncation level <img src="elliptic_demo_eq51528.png" alt="$d$"> and correlation length <img src="elliptic_demo_eq27869.png" alt="$c$"> of the random field and call <tt>elliptic_func</tt> to generate the parameterized matrix interfaces. The truncation level determines the dimension of the multivariate polynomial approximation. See the documentation for <tt>ellitic_func</tt> for details.</p><pre class="codeinput">d = 4; c = 2;
+P = elliptic_func(<span class="string">'trunc'</span>,d,<span class="string">'corr'</span>,c');
+</pre><pre class="codeoutput">Created a mesh with 177 nodes.
+</pre><p>Plot the finite element mesh.</p><pre class="codeinput">pdemesh(P.mesh.p,P.mesh.e,P.mesh.t);
+</pre><img vspace="5" hspace="5" src="elliptic_demo_01.png" alt=""> <p>Plot the singular values of the Karhunen-Loeve expansion of the coefficients to see their decay.</p><pre class="codeinput">figure;
+plot(1:d,P.KL.sv,<span class="string">'ro'</span>,<span class="string">'MarkerSize'</span>,14);
+ylabel(<span class="string">'Singular Values of the KL Expansion'</span>);
+xlim([0 d+1]);
+</pre><img vspace="5" hspace="5" src="elliptic_demo_02.png" alt=""> <h2>Construct a Spectral Galerkin Approximation<a name="4"></a></h2><p>We use the <tt>spectral_galerkin</tt> function to construct the multivariate polynomial approximation with a full polynomial basis. We will employ a cubic polynomial approximation. We explicitly specify the solver as conjugate gradient since we know the Galerkin matrix is symmetric in this case.</p><pre class="codeinput">pOrder = 3; <span class="comment">% the order of polynomial approximation</span>
+
+<span class="comment">% construct the solver</span>
+pcgtol = 1e-6; pcgmaxi=1000;
+solver = @(A,b) pcg(A,b,pcgtol,pcgmaxi);
+
+tic
+[X,error1] = spectral_galerkin(P.A,P.b,P.s,3,<span class="string">'Solver'</span>,solver);
+t1 = toc;
+</pre><pre class="codeoutput">pcg converged at iteration 343 to a solution with relative residual 9e-07
+</pre><h2>Coefficient Decay<a name="5"></a></h2><p>To get an idea of the quality of the cubic approximation, we can plot the 2-norm of the vector of coefficients associated with each polynomial term. We order the coefficients by total order of the basis polynomial</p><pre class="codeinput">figure;
+semilogy(sum(X.index_set),sqrt(sum(X.coefficients.^2)),<span class="string">'bo'</span>,<span class="string">'MarkerSize'</span>,14);
+xlabel(<span class="string">'Order of Polynomial'</span>);
+ylabel(<span class="string">'2-norm of the Polynomial Coefficients'</span>);
+xlim([-1 pOrder+1]);
+</pre><img vspace="5" hspace="5" src="elliptic_demo_03.png" alt=""> <h2>Surface Plot of Mean and Variance<a name="6"></a></h2><p>We next plot the mean and variance of the approximation.</p><pre class="codeinput">Xmean = X.coefficients(:,1);
+figure;
+pdesurf(P.mesh.p,P.mesh.t,Xmean);
+view(2); colorbar;
+title(<span class="string">'Mean of Solution'</span>);
+
+Xvar = sum(X.coefficients(:,2:end).^2,2);
+figure;
+pdesurf(P.mesh.p,P.mesh.t,Xvar);
+view(2); colorbar;
+title(<span class="string">'Variance of Solution'</span>);
+</pre><img vspace="5" hspace="5" src="elliptic_demo_04.png" alt=""> <img vspace="5" hspace="5" src="elliptic_demo_05.png" alt=""> <h2>Using a Preconditioner<a name="7"></a></h2><p>We can run the spectral Galerkin code again using a preconditioner to see if it helps speed the solver. We will precondition by parameterized matrix evaluated at the midpoint of the pararameter space.</p><pre class="codeinput">s_mid=midpoint(P.s); <span class="comment">% find the midpoint of the domain</span>
+R=chol(P.A(s_mid),<span class="string">'lower'</span>); <span class="comment">% compute the Cholesky factor</span>
+
+<span class="comment">% set up the preconditioned conjugate gradient solver</span>
+pcon1=@(x) galerkin_preconditioner(R',x);
+pcon2=@(x) galerkin_preconditioner(R,x);
+solver=@(A,b) pcg(A,b,pcgtol,pcgmaxi,pcon1,pcon2);
+
+tic
+[X,error2] = spectral_galerkin(P.A,P.b,P.s,pOrder,<span class="string">'Solver'</span>,solver);
+t2 = toc;
+</pre><pre class="codeoutput">pcg converged at iteration 247 to a solution with relative residual 9.9e-07
+</pre><h2>Construct a Pseudospectral Approximation<a name="8"></a></h2><p>We can compare the spectral Galerkin approximation with the full polynomial basis to the pseudospectral approximation using a tensor product basis.</p><pre class="codeinput">tic
+[X,error3] = pseudospectral(P.solve,P.s,pOrder);
+t3 = toc;
+</pre><p>We again plot the decay of the pseudospectral coefficients that are comparable to the Galerkin approximation.</p><pre class="codeinput">indz = find(sum(X.index_set)&lt;=pOrder);
+
+figure;
+semilogy(sum(X.index_set(:,indz)),sqrt(sum(X.coefficients(:,indz).^2)),<span class="string">'bo'</span>,<span class="string">'MarkerSize'</span>,14);
+xlabel(<span class="string">'Order of Polynomial'</span>);
+ylabel(<span class="string">'2-norm of the Polynomial Coefficients'</span>);
+xlim([-1 pOrder+1]);
+</pre><img vspace="5" hspace="5" src="elliptic_demo_06.png" alt=""> <p>Finally we output the results of the study.</p><pre class="codeinput">fprintf(<span class="string">'\n\n==== RESULTS ====\n'</span>);
+fprintf(<span class="string">'Galerkin w/o preconditioner:\t Time: %4.2e\t Error: %6.4e\n'</span>,t1,error1);
+fprintf(<span class="string">'Galerkin w/ preconditioner:\t Time: %4.2e\t Error: %6.4e\n'</span>,t2,error2);
+fprintf(<span class="string">'Pseudospectral:\t\t\t Time: %4.2e\t Error: %6.4e\n'</span>,t3,error3);
+</pre><pre class="codeoutput">
+
+==== RESULTS ====
+Galerkin w/o preconditioner:	 Time: 7.48e+01	 Error: 3.5078e-03
+Galerkin w/ preconditioner:	 Time: 7.38e+01	 Error: 3.5078e-03
+Pseudospectral:			 Time: 1.01e+00	 Error: 3.5379e-03
+</pre><p class="footer"><br>
+      Published with MATLAB&reg; 7.9<br></p></div><!--
+##### SOURCE BEGIN #####
+%% A Parameterized Elliptic Partial Differential Equation 
+% We examine a linear elliptic partial differential equation in two spatial
+% dimensions with homogeneous Dirichlet boundary conditions and 
+% parameterized scalar coefficients. For $x\in\mathcal{D}=[-1,1]^2$, let 
+% $u(x)$ satisfy
+%
+% $$\nabla\cdot(\alpha\nabla u) = f$$
+%
+% with $u=0$ on $\partial\mathcal{D}$, where $f=\cos(x)\sin(x)$ is the 
+% forcing function, and 
+%
+% $$\log(\alpha) = \log(\alpha(x,s)) = \sum_{k=1}^n \phi_k(x)\sigma_ks_k$$
+%
+% is the parameterized coefficient representing a truncated Karhunen-Loeve
+% expansion of a random field with covariance function
+%
+% $$C(x_1,x_2) = \gamma\exp\left(\frac{-\|x_1-x_2\|^2}{2c}\right).$$
+%
+% The parameter $\gamma$ scales the magnitude of the random field, and $c$
+% controls the correlation length. For more details on this problem, see
+% Nobile, et al. (SINUM, 2008a) and references therein.
+%
+% Using MATLAB's PDE Toolbox, we discretize this problem in space on an
+% irregular mesh. This results in a parameterized matrix equation
+%
+% $$\mathbf{A}(s)\mathbf{x}(s) = \mathbf{b}$$
+%
+% where $\mathbf{A}(s)$ is the parameterized stiffness matrix. We will use
+% PMPack to construct a multivariate polynomial approximation to the
+% solution $\mathbf{x}(s)$. 
+
+%% Construct The Problem
+% We set the truncation level $d$ and correlation length $c$ of the random
+% field and call |elliptic_func| to generate the parameterized matrix
+% interfaces. The truncation level determines the dimension of the
+% multivariate polynomial approximation. See the documentation for
+% |ellitic_func| for details.
+d = 4; c = 2;
+P = elliptic_func('trunc',d,'corr',c');
+
+%%
+% Plot the finite element mesh.
+pdemesh(P.mesh.p,P.mesh.e,P.mesh.t);
+
+%%
+% Plot the singular values of the Karhunen-Loeve expansion of the
+% coefficients to see their decay.
+figure; 
+plot(1:d,P.KL.sv,'ro','MarkerSize',14);
+ylabel('Singular Values of the KL Expansion');
+xlim([0 d+1]);
+
+%% Construct a Spectral Galerkin Approximation
+% We use the |spectral_galerkin| function to construct the multivariate
+% polynomial approximation with a full polynomial basis. We will employ a
+% cubic polynomial approximation. We explicitly specify the solver as
+% conjugate gradient since we know the Galerkin matrix is symmetric in this
+% case. 
+
+pOrder = 3; % the order of polynomial approximation
+
+% construct the solver
+pcgtol = 1e-6; pcgmaxi=1000;
+solver = @(A,b) pcg(A,b,pcgtol,pcgmaxi);
+
+tic
+[X,error1] = spectral_galerkin(P.A,P.b,P.s,3,'Solver',solver);
+t1 = toc;
+
+%% Coefficient Decay
+% To get an idea of the quality of the cubic approximation, we can plot the
+% 2-norm of the vector of coefficients associated with each polynomial 
+% term. We order the coefficients by total order of the basis polynomial
+figure;
+semilogy(sum(X.index_set),sqrt(sum(X.coefficients.^2)),'bo','MarkerSize',14);
+xlabel('Order of Polynomial');
+ylabel('2-norm of the Polynomial Coefficients');
+xlim([-1 pOrder+1]);
+
+%% Surface Plot of Mean and Variance
+% We next plot the mean and variance of the approximation.
+Xmean = X.coefficients(:,1);
+figure;
+pdesurf(P.mesh.p,P.mesh.t,Xmean); 
+view(2); colorbar;
+title('Mean of Solution');
+
+Xvar = sum(X.coefficients(:,2:end).^2,2);
+figure;
+pdesurf(P.mesh.p,P.mesh.t,Xvar); 
+view(2); colorbar;
+title('Variance of Solution'); 
+
+%% Using a Preconditioner
+% We can run the spectral Galerkin code again using a preconditioner to see
+% if it helps speed the solver. We will precondition by parameterized
+% matrix evaluated at the midpoint of the pararameter space.
+
+s_mid=midpoint(P.s); % find the midpoint of the domain
+R=chol(P.A(s_mid),'lower'); % compute the Cholesky factor
+
+% set up the preconditioned conjugate gradient solver
+pcon1=@(x) galerkin_preconditioner(R',x);
+pcon2=@(x) galerkin_preconditioner(R,x);
+solver=@(A,b) pcg(A,b,pcgtol,pcgmaxi,pcon1,pcon2);
+
+tic
+[X,error2] = spectral_galerkin(P.A,P.b,P.s,pOrder,'Solver',solver);
+t2 = toc;
+
+%% Construct a Pseudospectral Approximation
+% We can compare the spectral Galerkin approximation with the full
+% polynomial basis to the pseudospectral approximation using a tensor
+% product basis.
+
+tic
+[X,error3] = pseudospectral(P.solve,P.s,pOrder);
+t3 = toc;
+
+%%
+% We again plot the decay of the pseudospectral coefficients that are
+% comparable to the Galerkin approximation.
+indz = find(sum(X.index_set)<=pOrder);
+
+figure;
+semilogy(sum(X.index_set(:,indz)),sqrt(sum(X.coefficients(:,indz).^2)),'bo','MarkerSize',14);
+xlabel('Order of Polynomial');
+ylabel('2-norm of the Polynomial Coefficients');
+xlim([-1 pOrder+1]);
+
+
+%%
+% Finally we output the results of the study.
+fprintf('\n\n==== RESULTS ====\n');
+fprintf('Galerkin w/o preconditioner:\t Time: %4.2e\t Error: %6.4e\n',t1,error1);
+fprintf('Galerkin w/ preconditioner:\t Time: %4.2e\t Error: %6.4e\n',t2,error2);
+fprintf('Pseudospectral:\t\t\t Time: %4.2e\t Error: %6.4e\n',t3,error3);
+
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>

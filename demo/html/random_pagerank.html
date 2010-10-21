@@ -1,0 +1,123 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      --><title>Random Alpha PageRank</title><meta name="generator" content="MATLAB 7.9"><meta name="date" content="2010-10-18"><meta name="m-file" content="random_pagerank"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h1>Random Alpha PageRank</h1><!--introduction--><p>See Gleich and Constantine, Random Alpha PageRank, for details about this method.  PageRank is a method to evaluate the importance of nodes in a directed graph.  On the graph, we follow a random walk where at each step,   with probability a, we follow a randomly chosen link from the      current node   with probability (1-a), we jump to a randomly chosen node. (Both random choices are uniform over all the possibilities.) The stationary distribution of this Markov process is the PageRank vector.  We can compute the stationary distribution by solving a linear system,  <img src="random_pagerank_eq21249.png" alt="$$ (I - aP')x = (1-a)*(1/n)*e $$"> where P is the transition matrix for a random walk on the graph. In Random Alpha PageRank, we place a with a random variable, and examine the expected value of x.  This computation is solving a parameterized matrix problem.</p><p>Usually, we pick a Beta random variable for a -- this corresponds to approximating x(a) with a Jacobi parameter.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load a webgraph and setup the linear system</a></li><li><a href="#2">Setup the parameter</a></li><li><a href="#3">Compute the approximation</a></li><li><a href="#4">Get the expected solution</a></li><li><a href="#5">Plot the first component</a></li></ul></div><h2>Load a webgraph and setup the linear system<a name="1"></a></h2><pre class="codeinput">load(<span class="string">'wb-cs.stanford.mat'</span>);
+P = Pcc; <span class="comment">% only use the largest strong component -- this fixes a few technical details</span>
+A = @(a) (speye(size(P)) - a*P');
+b = @(a) (1-a)./size(P,1)*ones(size(P,1),1);
+iAb = @(a) A(a)\b(a);
+</pre><h2>Setup the parameter<a name="2"></a></h2><pre class="codeinput">s = [jacobi_parameter(0,1,2,3)];
+</pre><h2>Compute the approximation<a name="3"></a></h2><pre class="codeinput">[X,errz] = pseudospectral(iAb,s,<span class="string">'adapt'</span>);
+</pre><h2>Get the expected solution<a name="4"></a></h2><pre class="codeinput">ex = X.coefficients(:,1);
+</pre><h2>Plot the first component<a name="5"></a></h2><pre class="codeinput">first_component = @(x) x(1);
+fplot(@(a) first_component(evaluate_expansion(X,a)), [0,1]);
+</pre><img vspace="5" hspace="5" src="random_pagerank_01.png" alt=""> <p class="footer"><br>
+      Published with MATLAB&reg; 7.9<br></p></div><!--
+##### SOURCE BEGIN #####
+%% Random Alpha PageRank
+% See Gleich and Constantine, Random Alpha PageRank, for details about this
+% method.  PageRank is a method to evaluate the importance of nodes in a
+% directed graph.  On the graph, we follow a random walk where at each
+% step,
+%   with probability a, we follow a randomly chosen link from the
+%      current node
+%   with probability (1-a), we jump to a randomly chosen node.
+% (Both random choices are uniform over all the possibilities.)
+% The stationary distribution of this Markov process is the PageRank
+% vector.  We can compute the stationary distribution by solving a linear
+% system, 
+%  $$ (I - aP')x = (1-a)*(1/n)*e $$
+% where P is the transition matrix for a random walk on the graph.
+% In Random Alpha PageRank, we place a with a random variable, and examine
+% the expected value of x.  This computation is solving a parameterized
+% matrix problem.
+%
+% Usually, we pick a Beta random variable for a REPLACE_WITH_DASH_DASH this corresponds to
+% approximating x(a) with a Jacobi parameter.
+
+%% Load a webgraph and setup the linear system
+load('wb-cs.stanford.mat');
+P = Pcc; % only use the largest strong component REPLACE_WITH_DASH_DASH this fixes a few technical details
+A = @(a) (speye(size(P)) - a*P');
+b = @(a) (1-a)./size(P,1)*ones(size(P,1),1);
+iAb = @(a) A(a)\b(a);
+
+%% Setup the parameter
+s = [jacobi_parameter(0,1,2,3)];
+
+%% Compute the approximation
+[X,errz] = pseudospectral(iAb,s,'adapt');
+
+%% Get the expected solution
+ex = X.coefficients(:,1);
+
+
+%% Plot the first component
+first_component = @(x) x(1);
+fplot(@(a) first_component(evaluate_expansion(X,a)), [0,1]);
+
+
+
+##### SOURCE END #####
+--></body></html>

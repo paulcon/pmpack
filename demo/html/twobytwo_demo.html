@@ -1,0 +1,325 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      --><title>A 2x2 Parameterized Matrix Equation</title><meta name="generator" content="MATLAB 7.9"><meta name="date" content="2010-10-19"><meta name="m-file" content="twobytwo_demo"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h1>A 2x2 Parameterized Matrix Equation</h1><!--introduction--><p>This demo constructs and solves a simple parameterized matrix equation with a parameterized matrix of size 2x2. Given <img src="twobytwo_demo_eq32989.png" alt="$\varepsilon&gt;0$">, consider the functions <img src="twobytwo_demo_eq19274.png" alt="$x_1(s)$"> and <img src="twobytwo_demo_eq53999.png" alt="$x_2(s)$"> defined on <img src="twobytwo_demo_eq07394.png" alt="$s\in[-1,1]$"> that satisfy</p><p><img src="twobytwo_demo_eq72208.png" alt="$$ \left[\begin{array}{cc} 1+\varepsilon &amp; s\\ s &amp;&#xA;1\end{array}\right]\left[\begin{array}{c} x_1(s)\\&#xA;x_2(s)\end{array}\right] = \left[\begin{array}{c} 2\\ 1\end{array}\right]&#xA;$$"></p><p>The true solutions are given by</p><p><img src="twobytwo_demo_eq27245.png" alt="$$ x_1(s) = \frac{2-s}{1+\varepsilon-s^2},\qquad&#xA;x_2(s)=\frac{1+\varepsilon-2s}{1+\varepsilon-s^2} $$"></p><p>Both of these functions have poles at <img src="twobytwo_demo_eq85266.png" alt="$s=\pm\sqrt{1+\varepsilon}$">, which implies that a polynomial approximation will require more terms as <img src="twobytwo_demo_eq55349.png" alt="$\varepsilon$"> goes to zero. See Constantine et al. (2010) for more details.</p><p>We will use the PMPack software to construct polynomial approximations to <img src="twobytwo_demo_eq19274.png" alt="$x_1(s)$"> and <img src="twobytwo_demo_eq53999.png" alt="$x_2(s)$"> for various values of <img src="twobytwo_demo_eq55349.png" alt="$\varepsilon$">. Since the parameterized matrix depends linearly on the parameter <img src="twobytwo_demo_eq72999.png" alt="$s$">, the univariate pseudospectral approximation is equivalent to the univariate spectral Galerkin approximation. However, for the sake of the demo, we include the syntax for both methods.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">The Solution</a></li><li><a href="#2">Pseudospectral Convergence Study</a></li><li><a href="#3">Plot Pseudospectral Results</a></li><li><a href="#4">Observing Convergence</a></li><li><a href="#5">Spectral Galerkin Convergence Study</a></li><li><a href="#6">Plot Spectral Galerkin Results</a></li></ul></div><h2>The Solution<a name="1"></a></h2><p>We plot the solutions for various values of <img src="twobytwo_demo_eq55349.png" alt="$\varepsilon$"> followed a movie showing the convergence of the polynomial approximation to the true solution.</p><pre class="codeinput">x1 = @(t,e) (2-t)./(1+e-t.^2);
+x2 = @(t,e) (1+e-2*t)./(1+e-t.^2);
+ss = linspace(-1,1,500);
+
+figure;
+plot(ss,x1(ss,0.8),<span class="string">'b-'</span>,<span class="keyword">...</span>
+    ss,x1(ss,0.6),<span class="string">'g-'</span>,<span class="keyword">...</span>
+    ss,x1(ss,0.4),<span class="string">'r-'</span>,<span class="keyword">...</span>
+    ss,x1(ss,0.2),<span class="string">'m-'</span>);
+legend(<span class="string">'\epsilon=0.8'</span>,<span class="string">'\epsilon=0.6'</span>,<span class="string">'\epsilon=0.4'</span>,<span class="keyword">...</span>
+    <span class="string">'\epsilon=0.2'</span>,<span class="string">'Location'</span>,<span class="string">'NorthEast'</span>);
+xlabel(<span class="string">'s'</span>); ylabel(<span class="string">'x_1(s)'</span>);
+ylim([-5 20]);
+
+figure;
+plot(ss,x2(ss,0.8),<span class="string">'b-'</span>,<span class="keyword">...</span>
+    ss,x2(ss,0.6),<span class="string">'g-'</span>,<span class="keyword">...</span>
+    ss,x2(ss,0.4),<span class="string">'r-'</span>,<span class="keyword">...</span>
+    ss,x2(ss,0.2),<span class="string">'m-'</span>);
+legend(<span class="string">'\epsilon=0.8'</span>,<span class="string">'\epsilon=0.6'</span>,<span class="string">'\epsilon=0.4'</span>,<span class="keyword">...</span>
+    <span class="string">'\epsilon=0.2'</span>,<span class="string">'Location'</span>,<span class="string">'NorthEast'</span>);
+xlabel(<span class="string">'s'</span>); ylabel(<span class="string">'x_2(s)'</span>);
+ylim([-5 20]);
+</pre><img vspace="5" hspace="5" src="twobytwo_demo_01.png" alt=""> <img vspace="5" hspace="5" src="twobytwo_demo_02.png" alt=""> <h2>Pseudospectral Convergence Study<a name="2"></a></h2><p>We study the convergence of the pseudospectral approximation for various values of <img src="twobytwo_demo_eq55349.png" alt="$\varepsilon$">. We set a tolerance of 1e-6 and use the adaptive feature to determine the number of polynomial terms necessary to achieve an error smaller than the tolerance, where the error is computed as the relative error between successive approximations.</p><p>We also store the 2-norm of the vector of coefficients corresponding to each polynomial term. Theory tells us that this should behave like the approximation error, and we confirm this in the plots below.</p><pre class="codeinput">epsilon = [0.8 0.6 0.4 0.2];
+errors = cell(4,1);
+coefficients = cell(4,1);
+pTol = 1e-6;
+
+<span class="keyword">for</span> i=1:4
+    P = twobytwo_func(epsilon(i)); <span class="comment">% get an instance of the 2x2 problem</span>
+    iAb = P.solve;
+    s = P.s;
+
+    [X,errors{i}] = pseudospectral(iAb,s,<span class="string">'adapt'</span>,<span class="string">'pTol'</span>,pTol);
+    coefficients{i} = sqrt(sum(X.coefficients.^2));
+<span class="keyword">end</span>
+</pre><h2>Plot Pseudospectral Results<a name="3"></a></h2><p>We first plot the decay of the error for the different values of <img src="twobytwo_demo_eq55349.png" alt="$\varepsilon$">. We see clearly that the decay rate decreases as <img src="twobytwo_demo_eq55349.png" alt="$\varepsilon$"> gets smaller. We then plot the 2-norm of the coefficients associated with each basis polynomial. As theory suggests, this behaves like the error.</p><pre class="codeinput">figure;
+semilogy(1:length(errors{1}),errors{1},<span class="string">'bx'</span>,<span class="keyword">...</span>
+    1:length(errors{2}),errors{2},<span class="string">'gs'</span>,<span class="keyword">...</span>
+    1:length(errors{3}),errors{3},<span class="string">'ro'</span>,<span class="keyword">...</span>
+    1:length(errors{4}),errors{4},<span class="string">'m.'</span>);
+legend(<span class="string">'\epsilon=0.8'</span>,<span class="string">'\epsilon=0.6'</span>,<span class="string">'\epsilon=0.4'</span>,<span class="keyword">...</span>
+    <span class="string">'\epsilon=0.2'</span>,<span class="string">'Location'</span>,<span class="string">'NorthEast'</span>);
+xlabel(<span class="string">'Order of Pseudospectral Expansion'</span>);
+ylabel(<span class="string">'Pseudospectral Error'</span>);
+ylim([pTol 10]);
+
+figure;
+semilogy(1:length(coefficients{1}),coefficients{1},<span class="string">'bx'</span>,<span class="keyword">...</span>
+    1:length(coefficients{2}),coefficients{2},<span class="string">'gs'</span>,<span class="keyword">...</span>
+    1:length(coefficients{3}),coefficients{3},<span class="string">'ro'</span>,<span class="keyword">...</span>
+    1:length(coefficients{4}),coefficients{4},<span class="string">'m.'</span>);
+legend(<span class="string">'\epsilon=0.8'</span>,<span class="string">'\epsilon=0.6'</span>,<span class="string">'\epsilon=0.4'</span>,<span class="keyword">...</span>
+    <span class="string">'\epsilon=0.2'</span>,<span class="string">'Location'</span>,<span class="string">'NorthEast'</span>);
+xlabel(<span class="string">'Order of Basis Polynomial'</span>);
+ylabel(<span class="string">'Magnitude of Pseudospectral Expansion Coefficient'</span>);
+ylim([pTol 10]);
+</pre><img vspace="5" hspace="5" src="twobytwo_demo_03.png" alt=""> <img vspace="5" hspace="5" src="twobytwo_demo_04.png" alt=""> <h2>Observing Convergence<a name="4"></a></h2><p>We next show convergence of the polynomial approximation for <img src="twobytwo_demo_eq53999.png" alt="$x_2(s)$"> with <img src="twobytwo_demo_eq70632.png" alt="$\varepsilon=0.2$">. We also plot the quadrature points where the polynomial interpolates the true solution.</p><p><img vspace="5" hspace="5" src="convergence.gif" alt=""> </p><h2>Spectral Galerkin Convergence Study<a name="5"></a></h2><p>We repeat the above convergence study with the spectral Galerkin method to demonstrate the interface for the code.</p><pre class="codeinput">epsilon = [0.8 0.6 0.4 0.2];
+errors = cell(4,1);
+coefficients = cell(4,1);
+pTol = 1e-6;
+
+<span class="keyword">for</span> i=1:4
+    P = twobytwo_func(epsilon(i)); <span class="comment">% get an instance of the 2x2 problem</span>
+    A = P.A;
+    b = P.b;
+    s = P.s;
+
+    [X,errors{i}] = spectral_galerkin(A,b,s,<span class="string">'adapt'</span>,<span class="string">'pTol'</span>,pTol);
+    coefficients{i} = sqrt(sum(X.coefficients.^2));
+<span class="keyword">end</span>
+</pre><h2>Plot Spectral Galerkin Results<a name="6"></a></h2><p>We generate the same plots for the Galerkin approximation as we did for pseudospectral approximation. No surprises here -- the approximations behave identically.</p><pre class="codeinput">figure;
+semilogy(1:length(errors{1}),errors{1},<span class="string">'bx'</span>,<span class="keyword">...</span>
+    1:length(errors{2}),errors{2},<span class="string">'gs'</span>,<span class="keyword">...</span>
+    1:length(errors{3}),errors{3},<span class="string">'ro'</span>,<span class="keyword">...</span>
+    1:length(errors{4}),errors{4},<span class="string">'m.'</span>);
+legend(<span class="string">'\epsilon=0.8'</span>,<span class="string">'\epsilon=0.6'</span>,<span class="string">'\epsilon=0.4'</span>,<span class="keyword">...</span>
+    <span class="string">'\epsilon=0.2'</span>,<span class="string">'Location'</span>,<span class="string">'NorthEast'</span>);
+xlabel(<span class="string">'Order of Galerkin Polynomial Expansion'</span>);
+ylabel(<span class="string">'Galerkin Error'</span>);
+ylim([pTol 10]);
+
+figure;
+semilogy(1:length(coefficients{1}),coefficients{1},<span class="string">'bx'</span>,<span class="keyword">...</span>
+    1:length(coefficients{2}),coefficients{2},<span class="string">'gs'</span>,<span class="keyword">...</span>
+    1:length(coefficients{3}),coefficients{3},<span class="string">'ro'</span>,<span class="keyword">...</span>
+    1:length(coefficients{4}),coefficients{4},<span class="string">'m.'</span>);
+legend(<span class="string">'\epsilon=0.8'</span>,<span class="string">'\epsilon=0.6'</span>,<span class="string">'\epsilon=0.4'</span>,<span class="keyword">...</span>
+    <span class="string">'\epsilon=0.2'</span>,<span class="string">'Location'</span>,<span class="string">'NorthEast'</span>);
+xlabel(<span class="string">'Order of Basis Polynomial'</span>);
+ylabel(<span class="string">'Magnitude of Galerin Expansion Coefficient'</span>);
+ylim([pTol 10]);
+</pre><img vspace="5" hspace="5" src="twobytwo_demo_05.png" alt=""> <img vspace="5" hspace="5" src="twobytwo_demo_06.png" alt=""> <p class="footer"><br>
+      Published with MATLAB&reg; 7.9<br></p></div><!--
+##### SOURCE BEGIN #####
+%% A 2x2 Parameterized Matrix Equation
+% This demo constructs and solves a simple parameterized matrix equation
+% with a parameterized matrix of size 2x2. Given $\varepsilon>0$, consider
+% the functions $x_1(s)$ and $x_2(s)$ defined on $s\in[-1,1]$ that satisfy
+%
+% $$ \left[\begin{array}{cc} 1+\varepsilon & s\\ s &
+% 1\end{array}\right]\left[\begin{array}{c} x_1(s)\\
+% x_2(s)\end{array}\right] = \left[\begin{array}{c} 2\\ 1\end{array}\right]
+% $$
+%
+% The true solutions are given by
+%
+% $$ x_1(s) = \frac{2-s}{1+\varepsilon-s^2},\qquad
+% x_2(s)=\frac{1+\varepsilon-2s}{1+\varepsilon-s^2} $$
+%
+% Both of these functions have poles at $s=\pm\sqrt{1+\varepsilon}$, which
+% implies that a polynomial approximation will require more terms as
+% $\varepsilon$ goes to zero. See Constantine et al. (2010) for more
+% details. 
+%
+% We will use the PMPack software to construct polynomial approximations to
+% $x_1(s)$ and $x_2(s)$ for various values of $\varepsilon$. Since the
+% parameterized matrix depends linearly on the parameter $s$, the
+% univariate pseudospectral approximation is equivalent to the univariate
+% spectral Galerkin approximation. However, for the sake of the demo, we
+% include the syntax for both methods. 
+
+%% The Solution
+% We plot the solutions for various values of $\varepsilon$ followed a
+% movie showing the convergence of the polynomial approximation to the true
+% solution. 
+
+x1 = @(t,e) (2-t)./(1+e-t.^2);
+x2 = @(t,e) (1+e-2*t)./(1+e-t.^2);
+ss = linspace(-1,1,500);
+
+figure;
+plot(ss,x1(ss,0.8),'b-',...
+    ss,x1(ss,0.6),'g-',...
+    ss,x1(ss,0.4),'r-',...
+    ss,x1(ss,0.2),'m-');
+legend('\epsilon=0.8','\epsilon=0.6','\epsilon=0.4',...
+    '\epsilon=0.2','Location','NorthEast');
+xlabel('s'); ylabel('x_1(s)');
+ylim([-5 20]);
+
+figure;
+plot(ss,x2(ss,0.8),'b-',...
+    ss,x2(ss,0.6),'g-',...
+    ss,x2(ss,0.4),'r-',...
+    ss,x2(ss,0.2),'m-');
+legend('\epsilon=0.8','\epsilon=0.6','\epsilon=0.4',...
+    '\epsilon=0.2','Location','NorthEast');
+xlabel('s'); ylabel('x_2(s)');
+ylim([-5 20]);
+
+%% Pseudospectral Convergence Study
+% We study the convergence of the pseudospectral approximation for various
+% values of $\varepsilon$. We set a tolerance of 1e-6 and use the adaptive
+% feature to determine the number of polynomial terms necessary to achieve
+% an error smaller than the tolerance, where the error is computed as the
+% relative error between successive approximations. 
+%
+% We also store the 2-norm of the vector of coefficients corresponding to
+% each polynomial term. Theory tells us that this should behave like the
+% approximation error, and we confirm this in the plots below.
+
+epsilon = [0.8 0.6 0.4 0.2];
+errors = cell(4,1);
+coefficients = cell(4,1);
+pTol = 1e-6;
+
+for i=1:4
+    P = twobytwo_func(epsilon(i)); % get an instance of the 2x2 problem
+    iAb = P.solve;
+    s = P.s;
+    
+    [X,errors{i}] = pseudospectral(iAb,s,'adapt','pTol',pTol);
+    coefficients{i} = sqrt(sum(X.coefficients.^2));
+end
+
+%% Plot Pseudospectral Results
+% We first plot the decay of the error for the different values of
+% $\varepsilon$. We see clearly that the decay rate decreases as
+% $\varepsilon$ gets smaller. We then plot the 2-norm of the coefficients 
+% associated with each basis polynomial. As theory suggests, this behaves 
+% like the error.
+
+figure;
+semilogy(1:length(errors{1}),errors{1},'bx',...
+    1:length(errors{2}),errors{2},'gs',...
+    1:length(errors{3}),errors{3},'ro',...
+    1:length(errors{4}),errors{4},'m.');
+legend('\epsilon=0.8','\epsilon=0.6','\epsilon=0.4',...
+    '\epsilon=0.2','Location','NorthEast');
+xlabel('Order of Pseudospectral Expansion');
+ylabel('Pseudospectral Error');
+ylim([pTol 10]);    
+
+figure;
+semilogy(1:length(coefficients{1}),coefficients{1},'bx',...
+    1:length(coefficients{2}),coefficients{2},'gs',...
+    1:length(coefficients{3}),coefficients{3},'ro',...
+    1:length(coefficients{4}),coefficients{4},'m.');
+legend('\epsilon=0.8','\epsilon=0.6','\epsilon=0.4',...
+    '\epsilon=0.2','Location','NorthEast');
+xlabel('Order of Basis Polynomial');
+ylabel('Magnitude of Pseudospectral Expansion Coefficient');
+ylim([pTol 10]);
+
+%% Observing Convergence
+% We next show convergence of the polynomial approximation for $x_2(s)$
+% with $\varepsilon=0.2$. We also plot the quadrature points where the
+% polynomial interpolates the true solution.
+%
+% <<convergence.gif>>
+
+
+%% Spectral Galerkin Convergence Study
+% We repeat the above convergence study with the spectral Galerkin method
+% to demonstrate the interface for the code. 
+
+epsilon = [0.8 0.6 0.4 0.2];
+errors = cell(4,1);
+coefficients = cell(4,1);
+pTol = 1e-6;
+
+for i=1:4
+    P = twobytwo_func(epsilon(i)); % get an instance of the 2x2 problem
+    A = P.A;
+    b = P.b;
+    s = P.s;
+    
+    [X,errors{i}] = spectral_galerkin(A,b,s,'adapt','pTol',pTol);
+    coefficients{i} = sqrt(sum(X.coefficients.^2));
+end
+
+%% Plot Spectral Galerkin Results
+% We generate the same plots for the Galerkin approximation as we did for
+% pseudospectral approximation. No surprises here REPLACE_WITH_DASH_DASH the approximations
+% behave identically.
+
+figure;
+semilogy(1:length(errors{1}),errors{1},'bx',...
+    1:length(errors{2}),errors{2},'gs',...
+    1:length(errors{3}),errors{3},'ro',...
+    1:length(errors{4}),errors{4},'m.');
+legend('\epsilon=0.8','\epsilon=0.6','\epsilon=0.4',...
+    '\epsilon=0.2','Location','NorthEast');
+xlabel('Order of Galerkin Polynomial Expansion');
+ylabel('Galerkin Error');
+ylim([pTol 10]);    
+
+figure;
+semilogy(1:length(coefficients{1}),coefficients{1},'bx',...
+    1:length(coefficients{2}),coefficients{2},'gs',...
+    1:length(coefficients{3}),coefficients{3},'ro',...
+    1:length(coefficients{4}),coefficients{4},'m.');
+legend('\epsilon=0.8','\epsilon=0.6','\epsilon=0.4',...
+    '\epsilon=0.2','Location','NorthEast');
+xlabel('Order of Basis Polynomial');
+ylabel('Magnitude of Galerin Expansion Coefficient');
+ylim([pTol 10]);
+
+##### SOURCE END #####
+--></body></html>
