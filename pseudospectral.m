@@ -160,10 +160,6 @@ if ~verbose, vprintf = @(varargin) []; end
 
 % Check to see whether or not we do a convergence study.
 if isnumeric(pOrder)
-    if ptol~=0, 
-        warning('pmpack:ignored',...
-            'The specified polynomial tolerance will be ignored.'); 
-    end
     if isscalar(pOrder) 
         pOrder=pOrder*ones(dim,1); 
     else
@@ -243,6 +239,11 @@ else
     X.vecfun=vecfun;
     X.matvecfun=matvecfun;
     X=sort_bases(X);
+    
+    if nargout==2
+        errz=error_estimate('MinCoeff',X);
+    end
+    
 end
 vprintf('done');
 
